@@ -17,36 +17,21 @@ What does a .env truly need?
 
 That is for *ME* to decide...
 
-# server config
+server config
 host=localhost
 port=15000
 debug=true
 
-# database config
+database config
 database=
 dbhost=
 dbuser=
 dbpassword=
 dbport=
 
-# travel time API keys
+travel time API keys
 tt_app_id=
 tt_api_key=
 
-# for vercel
-
-
-[
-	{
-		"key": "f5",
-		"command": "extension.multiCommand.execute",
-		"args": {
-			"sequence": [
-				{ "command": "workbench.action.terminal.sendSequence", "args": { "text": "\u0003" } },
-				"python.execInTerminal"
-			]
-		},
-		"when": "editorTextFocus"
-	}
-]
-in vscode keybindings.json for f5 to run current python file
+for vercel
+vercel=true
