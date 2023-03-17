@@ -26,4 +26,5 @@ def getSampleTrip():
 def authenticate():
     return "bing chilling"
 
-app.run(host = secret["host"], port = secret["port"], debug = (secret['debug'].lower()=="true"))
+if __name__ == "__main__":
+    app.run(host = secret["host"], port = secret["port"], debug = (secret['debug'].lower()=="true"))
