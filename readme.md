@@ -32,6 +32,3 @@ dbport=
 travel time API keys
 tt_app_id=
 tt_api_key=
-
-for vercel
-vercel=true

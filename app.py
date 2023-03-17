@@ -4,7 +4,10 @@ import json
 import os
 from dotenv import dotenv_values
 
-secret = dotenv_values(dotenv_path=os.path.dirname(__file__) + '/.env')
+if os.environ.get("VERCEL"):
+    secret = os.environ
+else:
+    secret = dotenv_values(dotenv_path=os.path.dirname(__file__) + '/.env')
 
 TripBuilder = nimbusCORE.TripBuilder()
 
@@ -18,8 +21,9 @@ def index():
 def getSampleTrip():
     return json.dumps(TripBuilder.demo_trip())
 
-@app.route('/authenticate')
-def authenticate():
-    return "bing chilling"
+@app.route('/get_trip_mcts')
+def getTripMCTS():
+    return json.dumps(TripBuilder.generate_trip_mcts())
 
-app.run(host = secret["host"], port = secret["port"], debug = (secret['debug'].lower()=="true"))
+if __name__ == "__main__":
+    app.run(host = secret["host"], port = secret["port"], debug = (secret['debug'].lower()=="true"))
