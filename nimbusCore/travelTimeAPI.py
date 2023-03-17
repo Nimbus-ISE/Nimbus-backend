@@ -4,7 +4,10 @@ from dotenv import dotenv_values
 import os
 from .processData import dataProcesser
 
-secret = dotenv_values(dotenv_path=os.path.dirname(__file__) + '/../.env')
+if os.environ.get("VERCEL"):
+    secret = os.environ
+else:
+	secret = dotenv_values(dotenv_path=os.path.dirname(__file__) + '/../.env')
 
 
 class travelTimeAPI():

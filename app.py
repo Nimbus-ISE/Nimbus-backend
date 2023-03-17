@@ -4,7 +4,11 @@ import json
 import os
 from dotenv import dotenv_values
 
-secret = dotenv_values(dotenv_path=os.path.dirname(__file__) + '/.env')
+
+if os.environ.get("VERCEL"):
+    secret = os.environ
+else:
+    secret = dotenv_values(dotenv_path=os.path.dirname(__file__) + '/.env')
 
 TripBuilder = nimbusCORE.TripBuilder()
 
