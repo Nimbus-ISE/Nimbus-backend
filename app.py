@@ -8,7 +8,7 @@ from dotenv import dotenv_values
 if os.environ.get("VERCEL"):
     secret = os.environ
 else:
-    secret = dotenv_values(dotenv_path=os.path.dirname(__file__) + '/.env')
+    secret = dotenv_values(os.path.dirname(os.path.realpath(__file__)) + '/.env')
 
 TripBuilder = nimbusCORE.TripBuilder()
 
