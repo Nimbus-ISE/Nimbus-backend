@@ -82,17 +82,17 @@ class dataProcesser():
         # dimension : 
         # locations = [ Location(id="Samyan Mitrtown", coords=Coordinates(lat=13.7344606, lng=100.52829290867629)), ]
         # search_ids = {'Samyan Mitrtown' : ['Chamchuri Square','Siam Square','Wat Pathum Wanaram', ], }
-    
+        
         for loc_data in locations_data:
             locations += [Location(id=loc_data[0],coords=Coordinates(lat=loc_data[1],lng=loc_data[2]))]
-            
             search_ids[loc_data[0]] = []
             for loc_data_B in locations_data:
                 if loc_data != loc_data_B:
                     search_ids[loc_data[0]] += [loc_data_B[0]]
         
+        
         return locations, search_ids
     
 if __name__ == "__main__":
     data_processor = dataProcesser()
-    print(data_processor.get_MCTS_data())
+    print(data_processor.get_places_for_travelTimeAPI())
