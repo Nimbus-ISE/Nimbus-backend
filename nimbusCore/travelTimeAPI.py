@@ -3,11 +3,9 @@ from traveltimepy import Location, Coordinates, PublicTransport, Property, FullR
 from dotenv import dotenv_values
 import os
 from .processData import dataProcesser
+import math
 
-if os.environ.get("VERCEL"):
-    secret = os.environ
-else:
-    secret = dotenv_values(dotenv_path=os.path.dirname(__file__) + '/.env')
+secret = dotenv_values(dotenv_path=os.path.realpath(os.path.dirname(__file__)) + '/.env')
 
 
 class travelTimeAPI():
@@ -24,17 +22,16 @@ class travelTimeAPI():
 		# need to cut search_ids in block of 20
   
 		results = []
+		
+		for i in math.ceil(len(search_ids) / 20):
 
-		# while len(search_ids) > 0:
-
-		results += self.sdk.time_filter(
+			results += self.sdk.time_filter(
     									locations=locations,
-    									search_ids=search_ids,
+    									search_ids=search_ids[20 * i : 20 * (i+1)],
     									departure_time=datetime.now(),
     									travel_time=3600,
     									transportation=PublicTransport(type='bus'),
     									properties=[Property.TRAVEL_TIME],
     									full_range=FullRange(enabled=True, max_results=3, width=600))
-			# search_ids = search_ids[20:]
 
 		return results
