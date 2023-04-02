@@ -71,6 +71,7 @@ class dbMan():
         self.cursor.execute("""
                             SELECT * from tag
                             """)
+        return self.cursor.fetchall()
 
     def get_travel_time_matrix(self):
         return {{}}
