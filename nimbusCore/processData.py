@@ -41,7 +41,6 @@ class dataProcesser():
         places = {}
         for value in loc_datas:
             if value["open_day"].lower() not in places.keys():
-                print(value["open_day"].lower())
                 places[value["open_day"].lower()] = [value]
             else:
                 places[value["open_day"].lower()].append(value)
@@ -51,12 +50,12 @@ class dataProcesser():
         travel_time_matrix = {}
         # TEMP
         for placeA in places["mon"]:
-            travel_time_matrix[placeA['name']] = {}
+            travel_time_matrix[placeA['id']] = {}
             for placeB in places["mon"]:
-                if placeB['type'] == ['wait'] or placeA['type'] == ['wait']:
-                    travel_time_matrix[placeA['name']][placeB['name']] = 0
+                if placeB['id'] == 'wait' or placeA['id'] == 'wait':
+                    travel_time_matrix[placeA['id']][placeB['id']] = 0
                 else:  
-                    travel_time_matrix[placeA['name']][placeB['name']] = sqrt(( placeA['coordinate'][0] - placeB['coordinate'][0]) ** 2 + (placeA['coordinate'][1] - placeB['coordinate'][1]) ** 2 )
+                    travel_time_matrix[placeA['id']][placeB['id']] = sqrt(( placeA['coordinate'][0] - placeB['coordinate'][0]) ** 2 + (placeA['coordinate'][1] - placeB['coordinate'][1]) ** 2 )
         
         #buffer places and travel_time_matrix ?? maybe update every hours/days
         return (places,travel_time_matrix)
