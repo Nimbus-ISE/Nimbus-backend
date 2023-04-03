@@ -61,6 +61,14 @@ class travelTimeAPI():
 
             response.append(requests.request("POST", url, headers=headers, data=json.dumps(payload)).text)
 
+        # result = {}
+        # data = json.loads(response)
+        # data = [json.loads(datum) for datum in data]
+        # for res in data:
+        #     for onexn_mat in res['results']:
+        #         result[onexn_mat['search_id'].split('.')[1]] = {}
+        #         for location in onexn_mat['locations']:
+        #             result[int(onexn_mat['search_id'].split('.')[1])][int(location['id'].split('.')[1])] = location['properties'][0]['travel_time'] / 60
         with open("dis_mat_post.json", "w") as text_file:
             text_file.write(json.dumps(response))
 

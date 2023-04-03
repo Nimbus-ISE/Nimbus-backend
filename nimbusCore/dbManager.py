@@ -46,14 +46,15 @@ class dbMan():
 
     @checkConnection
     def get_loc_data_by_day(self, day):
-        self.cursor.execute("""SELECT loc_data_with_tag.LOC_ID,rating,LOC_NAME,TAG_LIST,LAT,lng,PRICE_LEVEL,PROVINCE,operating_time.OPEN_DAY,operating_time.OPEN_TIME,operating_time.CLOSE_TIME FROM (SELECT LOCATION_DATA.LOC_ID,
+        self.cursor.execute("""SELECT loc_data_with_tag.LOC_ID,rating,LOC_NAME,TAG_LIST,LAT,lng,PRICE_LEVEL,est_time_stay,PROVINCE,operating_time.OPEN_DAY,operating_time.OPEN_TIME,operating_time.CLOSE_TIME FROM (SELECT LOCATION_DATA.LOC_ID,
                                 	LOC_NAME,
                                 	STRING_AGG(TAG_NAME,
                                 		', ') AS TAG_LIST,
                                 	LAT, lng,
                                 	PRICE_LEVEL,
                                 	PROVINCE,
-                                    RATING
+                                    RATING,
+                                    est_time_stay
                                 FROM LOCATION_DATA
                                 INNER JOIN BELONG_TO ON LOCATION_DATA.LOC_ID = BELONG_TO.LOC_ID
                                 GROUP BY LOCATION_DATA.LOC_ID
@@ -65,14 +66,15 @@ class dbMan():
     
     @checkConnection
     def get_loc_data(self):
-        self.cursor.execute("""SELECT loc_data_with_tag.LOC_ID,rating,LOC_NAME,TAG_LIST,LAT,lng,PRICE_LEVEL,PROVINCE,operating_time.OPEN_DAY,operating_time.OPEN_TIME,operating_time.CLOSE_TIME FROM (SELECT LOCATION_DATA.LOC_ID,
+        self.cursor.execute("""SELECT loc_data_with_tag.LOC_ID,rating,LOC_NAME,TAG_LIST,LAT,lng,PRICE_LEVEL,est_time_stay,PROVINCE,operating_time.OPEN_DAY,operating_time.OPEN_TIME,operating_time.CLOSE_TIME FROM (SELECT LOCATION_DATA.LOC_ID,
                                 	LOC_NAME,
                                 	STRING_AGG(TAG_NAME,
                                 		', ') AS TAG_LIST,
                                 	LAT, lng,
                                 	PRICE_LEVEL,
                                 	PROVINCE,
-                                    RATING
+                                    RATING,
+                                    est_time_stay
                                 FROM LOCATION_DATA
                                 INNER JOIN BELONG_TO ON LOCATION_DATA.LOC_ID = BELONG_TO.LOC_ID
                                 GROUP BY LOCATION_DATA.LOC_ID

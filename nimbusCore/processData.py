@@ -70,15 +70,14 @@ class dataProcesser():
         df['tags'] = df['tag_list'].str.split(', ')
         df['coordinate'] = list(zip(df['lat'], df['lng']))
         df['hours'] = list(zip(df['open_time'], df['close_time']))
-        df['duration'] = 60  # temp
-        df['durationH'] = df.duration/60  # temp
-        df.drop(['price_level', "lat", "lng", "province", "open_time",
+        df['duration'] = 60
+        df['durationH'] = df.duration/60
+        df.drop(["lat", "lng", "province", "open_time",
                 "close_time", "tag_list"], axis=1, inplace=True)
         df.rename(columns={'loc_id': 'id'}, inplace=True)
-        df = df[['id', 'loc_name', 'coordinate', 'tags', 'hours',
+        df = df[['id', 'loc_name', 'coordinate', 'tags', 'hours','price_level','est_time_stay',
                  'duration', 'durationH', 'rating', "open_day"]]
         df['rating'] = df['rating'].apply(lambda x: float(x))
-        # TODO add wait node
 
         return df.to_dict('records')
 
@@ -130,7 +129,7 @@ class dataProcesser():
                     "travel_time"
                 ],
                 "transportation": {  # for public transportation
-                    "type": "walking",
+                    "type": "driving",
                     # "max_changes": {
                     #     "enabled": True,
                     #     "limit": 0
