@@ -2,7 +2,6 @@ from math import sqrt
 import requests
 from traveltimepy import Location, Coordinates
 import pandas as pd
-from dbManager import dbMan
 from datetime import datetime, timedelta
 import sys
 import os
@@ -12,6 +11,7 @@ import json
 
 sys.path.append(os.path.realpath(os.path.dirname(__file__)))
 
+from dbManager import dbMan
 
 class dataProcesser():
 
@@ -102,11 +102,8 @@ class dataProcesser():
 
     def get_json_for_ttapi(self):
         locations_data = self.db.get_places_coordinate()
-        payload = {}
         locations = []
-        departure_search = []
-        arrival_searches = []
-        url = "https://api.traveltimeapp.com/v4/time-filter"
+        departure_searches = []
 
         tz = pytz.timezone('Asia/Bangkok')
         dt = datetime.now(tz).replace(
@@ -116,16 +113,16 @@ class dataProcesser():
 
         for loc_data in locations_data:
             locations.append(
-                [{'id': loc_data[0], 'coords':{'lat': loc_data[1], 'lng':loc_data[2]}}])
+                {"id": 'P.' + str(loc_data[0]), "coords":{"lat": loc_data[1], "lng":loc_data[2]}})
 
             arrival_location_ids = []
             for loc_data_B in locations_data:
                 if loc_data != loc_data_B:
-                    arrival_location_ids.append(loc_data_B[0])
+                    arrival_location_ids.append('P.' + str(loc_data_B[0]))
 
-            departure_search.append({
-                "id": loc_data[0],
-                'departure_location_id': loc_data[0],
+            departure_searches.append({
+                "id": 'from.' + str(loc_data[0]),
+                'departure_location_id': 'P.' + str(loc_data[0]),
                 'arrival_location_ids': arrival_location_ids,
                 'departure_time': next_monday.isoformat(),
                 'travel_time': 3600,
@@ -133,34 +130,34 @@ class dataProcesser():
                     "travel_time"
                 ],
                 "transportation": {  # for public transportation
-                    "type": "driving",
-                    "max_changes": {
-                        "enabled": True,
-                        "limit": 0
-                    }
+                    "type": "walking",
+                    # "max_changes": {
+                    #     "enabled": True,
+                    #     "limit": 0
+                    # }
                 },
-                "range": {  # for public transportation
-                    "enabled": False,
-                    "max_results": 0,
-                    "width": 600
-                },
+                # "range": {  # for public transportation
+                #     "enabled": False,
+                #     "max_results": 0,
+                #     "width": 600
+                # },
             })
 
         
         
-        sliced_departure_search = [departure_search[i:i+10] for i in range(0, len(departure_search), 10)]
+        sliced_departure_searches = [departure_searches[i:i+10] for i in range(0, len(departure_searches), 10)]
         
         payloads = [{
             "locations": locations,
-            "departure_search": sliced_departure_search_10
-        } for sliced_departure_search_10 in sliced_departure_search]
+            "departure_searches": sliced_departure_search_10
+        } for sliced_departure_search_10 in sliced_departure_searches]
         
         
         
         return payloads
 
-
 if __name__ == "__main__":
     data_processor = dataProcesser()
     # print(data_processor.get_places_for_travelTimeAPI())
-    print(data_processor.get_json_for_ttapi())
+    with open("place_data.txt", "w",encoding='utf8') as file:
+        file.write(json.dumps(data_processor.get_MCTS_data()[0], ensure_ascii=False))

@@ -3,8 +3,13 @@ import requests
 from traveltimepy import Location, Coordinates, PublicTransport, Property, FullRange, TravelTimeSdk, Driving
 from dotenv import dotenv_values
 import os
-from .processData import dataProcesser
 import math
+import sys
+import json
+
+sys.path.append(os.path.realpath(os.path.dirname(__file__)))
+
+from processData import dataProcesser
 
 secret = dotenv_values(dotenv_path=os.path.realpath(
     os.path.dirname(__file__)) + '\..\.env')
@@ -53,14 +58,13 @@ class travelTimeAPI():
         response = []
         url = "https://api.traveltimeapp.com/v4/time-filter"
         for payload in payloads:
-            response.append(requests.request(
-                "POST", url, headers=headers, data=payload).text)
+
+            response.append(requests.request("POST", url, headers=headers, data=json.dumps(payload)).text)
 
         with open("dis_mat_post.json", "w") as text_file:
-            text_file.write(response)
+            text_file.write(json.dumps(response))
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     ttapi = travelTimeAPI()
-    
     ttapi.getDistanceMatrixRestful()
