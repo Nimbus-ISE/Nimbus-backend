@@ -10,7 +10,7 @@ else:
 
 
 def checkConnection(func):
-    def wrapper(self, *args, **kwargs):
+    def wrapper(self : dbMan, *args, **kwargs):
         if self.test_connection():
             self.start_connection()
         return func(self, *args, **kwargs)
@@ -92,11 +92,13 @@ class dbMan():
 
     @checkConnection
     def get_travel_time_matrix(self):
+        #TODO
         return {{}}
 
     @checkConnection
-    def update_travel_time_matrix(self):
-        return
+    def update_travel_time_matrix(self,dis_mat):
+        #TODO
+        pass
 
     @checkConnection
     def get_places_coordinate(self):
