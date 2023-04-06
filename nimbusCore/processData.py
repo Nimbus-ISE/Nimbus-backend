@@ -28,12 +28,12 @@ class dataProcesser():
         travel_time_matrix = {}
         # TEMP
         for placeA in places:
-            travel_time_matrix[placeA['id']] = {}
+            travel_time_matrix[placeA['loc_id']] = {}
             for placeB in places:
                 if placeB['tags'] == ['wait'] or placeA['tags'] == ['wait']:
-                    travel_time_matrix[placeA['id']][placeB['id']] = 0
+                    travel_time_matrix[placeA['loc_id']][placeB['loc_id']] = 0
                 else:
-                    travel_time_matrix[placeA['id']][placeB['id']] = sqrt(
+                    travel_time_matrix[placeA['loc_id']][placeB['loc_id']] = sqrt(
                         (placeA['coordinate'][0] - placeB['coordinate'][0]) ** 2 + (placeA['coordinate'][1] - placeB['coordinate'][1]) ** 2)
 
         # buffer places and travel_time_matrix ?? maybe update every hours/days
@@ -53,12 +53,12 @@ class dataProcesser():
         travel_time_matrix = {}
         # TEMP
         for placeA in places["mon"]:
-            travel_time_matrix[placeA['id']] = {}
+            travel_time_matrix[placeA['loc_id']] = {}
             for placeB in places["mon"]:
-                if placeB['id'] == 'wait' or placeA['id'] == 'wait':
-                    travel_time_matrix[placeA['id']][placeB['id']] = 0
+                if placeB['loc_id'] == 'wait' or placeA['loc_id'] == 'wait':
+                    travel_time_matrix[placeA['loc_id']][placeB['loc_id']] = 0
                 else:
-                    travel_time_matrix[placeA['id']][placeB['id']] = sqrt(
+                    travel_time_matrix[placeA['loc_id']][placeB['loc_id']] = sqrt(
                         (placeA['coordinate'][0] - placeB['coordinate'][0]) ** 2 + (placeA['coordinate'][1] - placeB['coordinate'][1]) ** 2)
 
         # buffer places and travel_time_matrix ?? maybe update every hours/days
@@ -74,8 +74,7 @@ class dataProcesser():
         df['durationH'] = df.duration/60
         df.drop(["lat", "lng", "province", "open_time",
                 "close_time", "tag_list"], axis=1, inplace=True)
-        df.rename(columns={'loc_id': 'id'}, inplace=True)
-        df = df[['id', 'loc_name', 'coordinate', 'tags', 'hours','price_level','est_time_stay',
+        df = df[['loc_id', 'loc_name', 'coordinate', 'tags', 'hours','price_level','est_time_stay',
                  'duration', 'durationH', 'rating', "open_day"]]
         df['rating'] = df['rating'].apply(lambda x: float(x))
 
@@ -154,6 +153,12 @@ class dataProcesser():
         
         
         return payloads
+
+    def update_travel_time_matrix(self,travel_time_matrix):
+        #TODO - convert to what?
+                
+        self.db.update_travel_time_matrix()
+        pass
 
 if __name__ == "__main__":
     data_processor = dataProcesser()
