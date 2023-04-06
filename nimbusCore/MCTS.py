@@ -2,6 +2,8 @@ from .processData import dataProcesser
 import pickle
 from datetime import datetime, timedelta
 from copy import deepcopy
+from .MCTSV1 import generate_plan as generate_plan_v1
+from .MCTSV2 import generate_plan as generate_plan_v2
 
 data_file = "place_dat.txt"
 
@@ -15,7 +17,7 @@ class MCTS():
 
     # for daily / weekly / data update
     def update_data(self):
-        # try except??
+        # TODO - get new ttmat from ttapi
         self.POI_dict_day_of_week, self.distance_matrix = self.dataProcessor.get_MCTS_data()
         return "OK"
 
@@ -32,7 +34,7 @@ class MCTS():
         with open('demo_plan.json', 'r', encoding='utf8') as f:
             return f.read()
 
-    def travel_plan(self, start_date: datetime, end_date: datetime, tags: list, must_add: list = None):
+    def travel_plan_v1(self, start_date: datetime, end_date: datetime, tags: list, must_add: list = None):
         delta = end_date - start_date
         date_list = [start_date + timedelta(days=i)
                      for i in range(delta.days + 1)]
@@ -50,17 +52,14 @@ class MCTS():
             for used_place in travel_day:
                 i = 0
                 while i < len(places):
-                    if int(places[i]['id']) == int(used_place['loc_id']):
+                    if int(places[i]['loc_id']) == int(used_place['loc_id']):
                         places.pop(i)
                     i += 1
 
     # TODO
     def _travel_day(self, places, score_matrix: dict, startHour=8, endHour=18):
-        
-        return [{}]
+        return generate_plan_v1()
 
     # TODO
-    def _generate_scoreMatrix(self, places, good_tags, bad_tags, distance_martix, time_modifier):
-        # { loc_id : { loc_id : score, }, }
-
-        score_matrix = {}
+    def travel_plan_v2(self, start_date: datetime, end_date: datetime, tags: list, must_add: list = None, budget: int = None, food: bool = False):
+        return generate_plan_v2()

@@ -59,7 +59,8 @@ class travelTimeAPI():
         url = "https://api.traveltimeapp.com/v4/time-filter"
         for payload in payloads:
 
-            response.append(requests.request("POST", url, headers=headers, data=json.dumps(payload)).text)
+            response.append(requests.request(
+                "POST", url, headers=headers, data=json.dumps(payload)).text)
 
         # result = {}
         # data = json.loads(response)

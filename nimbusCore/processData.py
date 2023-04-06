@@ -74,7 +74,7 @@ class dataProcesser():
         df['durationH'] = df.duration/60
         df.drop(["lat", "lng", "province", "open_time",
                 "close_time", "tag_list"], axis=1, inplace=True)
-        df = df[['loc_id', 'loc_name', 'coordinate', 'tags', 'hours','price_level','est_time_stay',
+        df = df[['loc_id', 'loc_name', 'coordinate', 'tags', 'hours', 'price_level', 'est_time_stay',
                  'duration', 'durationH', 'rating', "open_day"]]
         df['rating'] = df['rating'].apply(lambda x: float(x))
 
@@ -111,7 +111,7 @@ class dataProcesser():
 
         for loc_data in locations_data:
             locations.append(
-                {"id": 'P.' + str(loc_data[0]), "coords":{"lat": loc_data[1], "lng":loc_data[2]}})
+                {"id": 'P.' + str(loc_data[0]), "coords": {"lat": loc_data[1], "lng": loc_data[2]}})
 
             arrival_location_ids = []
             for loc_data_B in locations_data:
@@ -141,27 +141,26 @@ class dataProcesser():
                 # },
             })
 
-        
-        
-        sliced_departure_searches = [departure_searches[i:i+10] for i in range(0, len(departure_searches), 10)]
-        
+        sliced_departure_searches = [departure_searches[i:i+10]
+                                     for i in range(0, len(departure_searches), 10)]
+
         payloads = [{
             "locations": locations,
             "departure_searches": sliced_departure_search_10
         } for sliced_departure_search_10 in sliced_departure_searches]
-        
-        
-        
+
         return payloads
 
-    def update_travel_time_matrix(self,travel_time_matrix):
-        #TODO - convert to what?
-                
+    def update_travel_time_matrix(self, travel_time_matrix):
+        # TODO - convert to what?
+
         self.db.update_travel_time_matrix()
         pass
+
 
 if __name__ == "__main__":
     data_processor = dataProcesser()
     # print(data_processor.get_places_for_travelTimeAPI())
-    with open("place_data.txt", "w",encoding='utf8') as file:
-        file.write(json.dumps(data_processor.get_MCTS_data()[0], ensure_ascii=False))
+    with open("place_data.txt", "w", encoding='utf8') as file:
+        file.write(json.dumps(data_processor.get_MCTS_data()
+                   [0], ensure_ascii=False))
