@@ -25,7 +25,7 @@ class TestMCTS(unittest.TestCase):
         mustAdd = []
         start = None
         end = None
-        self.assertIsNotNone(self.mcts.travel_plan(
+        self.assertIsNotNone(self.mcts.travel_plan_v2(
             startDate, endDate, goodTags, badTags, mustAdd, start, end))
 
 
