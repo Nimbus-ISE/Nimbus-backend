@@ -70,6 +70,7 @@ class dataProcesser():
         df['tags'] = df['tag_list'].str.split(', ')
         df['coordinate'] = list(zip(df['lat'], df['lng']))
         df['hours'] = list(zip(df['open_time'], df['close_time']))
+        #TODO get duration from db or remove this? alrdy have est_time_stay
         df['duration'] = 60
         df['durationH'] = df.duration/60
         df.drop(["lat", "lng", "province", "open_time",
@@ -127,9 +128,9 @@ class dataProcesser():
                 "properties": [
                     "travel_time"
                 ],
-                "transportation": {  # for public transportation
+                "transportation": {
                     "type": "driving",
-                    # "max_changes": {
+                    # "max_changes": {  # for public transportation
                     #     "enabled": True,
                     #     "limit": 0
                     # }
