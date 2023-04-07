@@ -8,7 +8,7 @@ import numpy as np
 import copy
 import json
 
-from .helper import timeStringToFloat
+from helper import timeStringToFloat
 
     
 def generatePlan(places, tags, distanceMatrix, userSelectedTags, budget):
@@ -27,7 +27,7 @@ def generatePlan(places, tags, distanceMatrix, userSelectedTags, budget):
         new_hours = (timeStringToFloat(places[i]['hours'][0]), timeStringToFloat(places[i]['hours'][1]))
         places[i]['hours'] = new_hours
 
-    placesDict = {place['id']: place for place in places}
+    placesDict = {place['loc_id']: place for place in places}
 
     # # calculate score
 
@@ -46,24 +46,24 @@ def generatePlan(places, tags, distanceMatrix, userSelectedTags, budget):
 
     placeScores = {}
     for i in range(len(totalScores)):
-        placeScores[places[i]['id']] = totalScores[i]
+        placeScores[places[i]['loc_id']] = totalScores[i]
 
     # scoring criteria: tag + rating + distance
     placeScoresMatrix = {}
     for x in places:
-        placeScoresMatrix[x['id']] = {}
+        placeScoresMatrix[x['loc_id']] = {}
 
         for y in places:
-            if 'wait' in x['tags'] or 'wait' in y['tags'] or x['id'] == y['id']:
-                placeScoresMatrix[x['id']][y['id']] = 0
+            if 'wait' in x['tags'] or 'wait' in y['tags'] or x['loc_id'] == y['loc_id']:
+                placeScoresMatrix[x['loc_id']][y['loc_id']] = 0
             else:
-                placeScoresMatrix[x['id']][y['id']] = placeScores[y['id']] / (1 + (distanceMatrix[x['id']][y['id']]))
+                placeScoresMatrix[x['loc_id']][y['loc_id']] = placeScores[y['loc_id']] / (1 + (distanceMatrix[x['loc_id']][y['loc_id']]))
 
     # # MCTS ALGORITHM
     
     class Node:
         def __init__(self, place, child=[], parent=None):
-            self.id = place['id']
+            self.loc_id = place['loc_id']
             self.est_time_stay_HR = toHour(place['est_time_stay'])
         
             self.child = child
@@ -74,8 +74,8 @@ def generatePlan(places, tags, distanceMatrix, userSelectedTags, budget):
             self.nodeReward = None
 
             if parent is not None:
-                self.travelTime = getTravelTimeHR(self.id, parent.id)  # time to get here
-                self.leaveTime = parent.leaveTime + self.est_time_stay_HR + getTravelTimeHR(self.id, parent.id)
+                self.travelTime = getTravelTimeHR(self.loc_id, parent.loc_id)  # time to get here
+                self.leaveTime = parent.leaveTime + self.est_time_stay_HR + getTravelTimeHR(self.loc_id, parent.loc_id)
             else:
                 self.travelTime = 0
                 self.leaveTime = startHour
@@ -90,39 +90,39 @@ def generatePlan(places, tags, distanceMatrix, userSelectedTags, budget):
         return x / 60
 
     def calcExploitScore(startNode, destNode):
-        if startNode.id == 'wait' and destNode != 'wait':
-            while startNode.id == 'wait':
+        if startNode.loc_id == 'wait' and destNode != 'wait':
+            while startNode.loc_id == 'wait':
                 startNode = startNode.parent
                 
-        return placeScoresMatrix[startNode.id][destNode.id]
+        return placeScoresMatrix[startNode.loc_id][destNode.loc_id]
 
     def calcExploreScore(startNode, destNode):
         return C * math.sqrt(math.log(startNode.visitCount + 1) / (destNode.visitCount + 1))
 
     def selection(startNode):
         index = 0
-        output_idx = 0
+        output_loc_idx = 0
         max = float('-inf')
 
         for destNode in startNode.child:
             score = (calcExploitScore(startNode, destNode) +
                     calcExploreScore(startNode, destNode))
             if max < score:
-                output_idx = index
+                output_loc_idx = index
                 max = score
             index += 1
 
-        return startNode.child[output_idx]
+        return startNode.child[output_loc_idx]
 
     def backPropagation(leaf):
         # accumulate totalReward for all ancestor
         # add node accumulated visitCount by 1
         node = leaf
-        totalReward = placeScoresMatrix[node.parent.id][node.id]
+        totalReward = placeScoresMatrix[node.parent.loc_id][node.loc_id]
         node.visitCount += 1
         while node.parent.parent is not None:
             node = node.parent
-            totalReward += placeScoresMatrix[node.parent.id][node.id]
+            totalReward += placeScoresMatrix[node.parent.loc_id][node.loc_id]
             node.visitCount += 1
 
         # update totalReward
@@ -137,9 +137,9 @@ def generatePlan(places, tags, distanceMatrix, userSelectedTags, budget):
 
         global itArr
         itArr = []
-        itArr.append((placesDict[pointer.id], 0)) # starting place
+        itArr.append((placesDict[pointer.loc_id], 0)) # starting place
         
-        print(placesDict[pointer.id])
+        print(placesDict[pointer.loc_id])
         print(f'leave at {pointer.leaveTime} node rewards : {pointer.nodeReward}')
 
         while len(pointer.child) != 0:
@@ -151,10 +151,10 @@ def generatePlan(places, tags, distanceMatrix, userSelectedTags, budget):
                     maxScore = pointer.child[i].totalReward / pointer.child[i].visitCount
             pointer = pointer.child[index]
 
-            print(placesDict[pointer.id])
+            print(placesDict[pointer.loc_id])
             print(f'DEPART AT {pointer.leaveTime}')
-            temp = copy.deepcopy(placesDict[pointer.id])
-            if pointer.id == ['wait']:
+            temp = copy.deepcopy(placesDict[pointer.loc_id])
+            if pointer.loc_id == ['wait']:
                 temp['coordinate'] = itArr[-1][0]['coordinate']
 
             # itinerary result
@@ -178,7 +178,7 @@ def generatePlan(places, tags, distanceMatrix, userSelectedTags, budget):
             return 'Restaurant' in place['tags']
         
         def isLowerThanBudget(place, selectedPlace, budget):
-            curCost = [placesDict[loc_id]['price_level'] for loc_id in selectedPlace]
+            curCost = [placesDict[loc_loc_id]['price_level'] for loc_loc_id in selectedPlace]
             
             return ((sum(curCost) + place['price_level']) / (len(selectedPlace) + 1)) <= budget
                 
@@ -187,13 +187,13 @@ def generatePlan(places, tags, distanceMatrix, userSelectedTags, budget):
             if includeLunch:
                 availPlace = [place for place in places if
                         # time budget
-                        pointer.leaveTime + getTravelTimeHR(pointer.id, place['id']) + toHour(place['est_time_stay']) < endHour
+                        pointer.leaveTime + getTravelTimeHR(pointer.loc_id, place['loc_id']) + toHour(place['est_time_stay']) < endHour
                         # operating hour
-                        and pointer.leaveTime + getTravelTimeHR(pointer.id, place['id']) >= place['hours'][0]
+                        and pointer.leaveTime + getTravelTimeHR(pointer.loc_id, place['loc_id']) >= place['hours'][0]
                         # operating hour
-                        and pointer.leaveTime + getTravelTimeHR(pointer.id, place['id']) + toHour(place['est_time_stay']) < place['hours'][1]
+                        and pointer.leaveTime + getTravelTimeHR(pointer.loc_id, place['loc_id']) + toHour(place['est_time_stay']) < place['hours'][1]
                         # not chosen
-                        and place['id'] not in selectedPlace
+                        and place['loc_id'] not in selectedPlace
                         and takeFood(place, pointer, hadFood)  # food once after noon
                         and isLowerThanBudget(place, selectedPlace, budget)
                         ]
@@ -206,7 +206,7 @@ def generatePlan(places, tags, distanceMatrix, userSelectedTags, budget):
         
         # global itTree
         itTree = Node(firstPlace)
-        selectedPlace = [firstPlace['id']]
+        selectedPlace = [firstPlace['loc_id']]
         # generate children nodes for the firstPlace 
         availablePlace = getAvailablePlace(itTree, False, budget) 
         childrenNodeExpansion(itTree, availablePlace)
@@ -219,9 +219,9 @@ def generatePlan(places, tags, distanceMatrix, userSelectedTags, budget):
             while pointer.child != []:
                 # selection
                 pointer = selection(pointer)
-                if pointer.id != 'wait':
-                    selectedPlace += [pointer.id]
-                if 'Restaurant' in placesDict[pointer.id]['tags']:
+                if pointer.loc_id != 'wait':
+                    selectedPlace += [pointer.loc_id]
+                if 'Restaurant' in placesDict[pointer.loc_id]['tags']:
                     hadFood = True
                 # expansion
                 if pointer.child == []:
@@ -231,9 +231,9 @@ def generatePlan(places, tags, distanceMatrix, userSelectedTags, budget):
             # back propagation
             backPropagation(pointer)
 
-        curCost = [placesDict[loc_id]['price_level'] for loc_id in selectedPlace]
+        curCost = [placesDict[loc_loc_id]['price_level'] for loc_loc_id in selectedPlace]
         print('avg price_level:', sum(curCost) / (len(selectedPlace)))
-        print('selected place_id:', selectedPlace)
+        print('selected place_loc_id:', selectedPlace)
         printOptimalPath(itTree)
 
     # # output
@@ -284,8 +284,8 @@ if __name__ == '__main__':
 
     # special location: wait - wait for next location to open
     waitHalfHour = {
-        'id': 'wait',
         'loc_id': 'wait',
+        'loc_loc_id': 'wait',
         'coordinate': (0, 0),
         'tags': ['wait'],
         'hours': ('0:00', '24:00'),
@@ -296,7 +296,7 @@ if __name__ == '__main__':
 
     tags = [
         "Restaurant",
-        "Hidden Gem",
+        "Hloc_idden Gem",
         "Mall",
         "Religion",
         "Nature",
@@ -329,7 +329,7 @@ if __name__ == '__main__':
 
     # # User params
     # real places
-    with open('../locations.txt', 'r', encoding='utf-8') as file:
+    with open('locations.txt', 'r', encoding='utf-8') as file:
         data = file.read()
         places = eval(data)
     places = places['mon'] # get monday only for now
@@ -337,7 +337,7 @@ if __name__ == '__main__':
 
     # # calculate distance matrix
     # real distances
-    with open('../driving.txt', 'r', encoding='utf-8') as file:
+    with open('driving.txt', 'r', encoding='utf-8') as file:
         data = file.read()
         distanceMatrix = eval(data)
 
