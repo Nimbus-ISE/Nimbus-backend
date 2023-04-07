@@ -1,3 +1,3 @@
-__all__ = ["dbManager", "MCTS", "nimbusCORE", "processData", "travelTimeAPI", "authenticate"]
+__all__ = ["dbManager", "MCTS", "nimbusCORE", "processData", "travelTimeAPI"]
 
-from . import dbManager, MCTS, nimbusCORE, processData, travelTimeAPI, authenticate
+from . import dbManager, MCTS, nimbusCORE, processData, travelTimeAPI
