@@ -253,6 +253,7 @@ def generatePlan(places, tags, distanceMatrix, userSelectedTags, startHour, endH
 
 
     def printGraph():
+        # print(itArr)
         x = [place[0]['coordinate'][0] for place in itArr]
         y = [place[0]['coordinate'][1] for place in itArr]
         placeName = [place[0]['loc_name'] for place in itArr]
@@ -267,7 +268,7 @@ def generatePlan(places, tags, distanceMatrix, userSelectedTags, startHour, endH
 
         plt.show()
 
-    printGraph()
+    # printGraph()
 
 
 if __name__ == '__main__':
