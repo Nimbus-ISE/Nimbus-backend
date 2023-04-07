@@ -11,7 +11,7 @@ import json
 from helper import timeStringToFloat
 
     
-def generatePlan(places, tags, distanceMatrix, userSelectedTags, budget):
+def generatePlan(places, tags, distanceMatrix, userSelectedTags, startHour, endHour, budget):
 
     # C is bias to explore new route
     # higher C = explore more = run longer
@@ -242,10 +242,7 @@ def generatePlan(places, tags, distanceMatrix, userSelectedTags, budget):
 
     # user input params
     POINUM = len(places)
-    startHour = 8
-    endHour = 19
     searchCycle = 10_000
-    budget = 4
 
     startTimer = time.time()
     mcts(searchCycle, budget=budget)
@@ -326,8 +323,6 @@ if __name__ == '__main__':
         "Buffet",
     ]
 
-
-    # # User params
     # real places
     with open('locations.txt', 'r', encoding='utf-8') as file:
         data = file.read()
@@ -341,9 +336,12 @@ if __name__ == '__main__':
         data = file.read()
         distanceMatrix = eval(data)
 
-    # # generate random userSelectedTags params
-    userSelectedTags = [tag for tag in tags if randInt(1)]
+    # # User params
+
+    userSelectedTags = [tag for tag in tags if randInt(1)] # generate random userSelectedTags params
+    startHour = 9
+    endHour = 16
     budget = 3
 
     print('Generating plan...')
-    generatePlan(places=places, tags=tags, distanceMatrix=distanceMatrix, userSelectedTags=userSelectedTags, budget=budget)
+    generatePlan(places=places, tags=tags, distanceMatrix=distanceMatrix, userSelectedTags=userSelectedTags, startHour=startHour, endHour=endHour, budget=budget)
