@@ -111,7 +111,7 @@ class dbMan(dbManInterface):
     @checkConnection
     def update_travel_time_matrix(self, tt_mat):
         # TODO
-        self.cursor.execute("INSERT INTO travel_time (loc_id_from, loc_id_to, travel_time, transport) VALUES (" + ','.join(['%s'] * len(tt_mat)) + ')'
+        self.cursor.execute("INSERT INTO travel_time (loc_id_from, loc_id_to, travel_time, transport) VALUES " + ','.join(['%s'] * len(tt_mat))
                             ,vars=tuple(tt_mat))
 
     @checkConnection

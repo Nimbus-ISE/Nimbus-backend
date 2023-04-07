@@ -27,8 +27,7 @@ def getSampleTrip():
 
 @app.route('/get_trip_mcts')
 def getTripMCTS():
-    return json.dumps(TripBuilder.generate_trip_mcts())
-
+    return json.dumps(TripBuilder.generate_trip_mcts(start_date=None,end_date=None,tags=[],must_add=None,budget=3,food=True))
 
 if __name__ == "__main__":
     app.run(host=secret["host"], port=secret["port"],
