@@ -237,10 +237,7 @@ def generatePlan(places, tags, distanceMatrix, userSelectedTags, startHour, endH
         printOptimalPath(itTree)
 
     # # output
-
-    # ### profiling + run + debug
-
-    # user input params
+    # algo params
     POINUM = len(places)
     searchCycle = 10_000
 
@@ -270,7 +267,7 @@ def generatePlan(places, tags, distanceMatrix, userSelectedTags, startHour, endH
 
         plt.show()
 
-    # printGraph()
+    printGraph()
 
 
 if __name__ == '__main__':
