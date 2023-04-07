@@ -9,16 +9,25 @@ else:
     secret = dotenv_values(dotenv_path=os.path.realpath(
         os.path.dirname(__file__)) + '\..\.env')
 
+class dbManInterface():
+    def __init__():
+       pass
+    
+    def test_connection() -> bool:
+        pass
+    
+    def start_connection():
+        pass
 
 def checkConnection(func):
-    def wrapper(self: dbMan, *args, **kwargs):
+    def wrapper(self: dbManInterface, *args, **kwargs):
         if self.test_connection():
             self.start_connection()
         return func(self, *args, **kwargs)
     return wrapper
 
 
-class dbMan():
+class dbMan(dbManInterface):
 
     def __init__(self):
         self.start_connection()
@@ -92,14 +101,18 @@ class dbMan():
         return self.cursor.fetchall()
 
     @checkConnection
-    def get_travel_time_matrix(self):
-        # TODO
-        return {{}}
-
+    def get_travel_time_matrix(self, transport = 'driving'):
+        self.cursor.execute("""
+                            SELECT loc_id_from,loc_id_to,travel_time from travel_time where transport = %s 
+                            """, vars=(transport,))
+        
+        return self.cursor.fetchall()
+    
     @checkConnection
-    def update_travel_time_matrix(self, dis_mat):
+    def update_travel_time_matrix(self, tt_mat):
         # TODO
-        pass
+        self.cursor.execute("INSERT INTO travel_time (loc_id_from, loc_id_to, travel_time, transport) VALUES (" + ','.join(['%s'] * len(tt_mat)) + ')'
+                            ,vars=tuple(tt_mat))
 
     @checkConnection
     def get_places_coordinate(self):

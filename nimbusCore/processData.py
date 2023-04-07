@@ -5,6 +5,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 import sys
 import os
+from collections import defaultdict
 
 import pytz
 import json
@@ -18,25 +19,11 @@ class dataProcesser():
     def __init__(self, db=dbMan()):
         self.db = db
 
-    # TODO remove open_day from this one
     def get_MCTS_data_by_day(self, day):
         loc_data = self.db.get_loc_data_by_day(day)
         places = self._process_places_for_MCTS(loc_data)
 
-        # use travel time api / db
-        # TODO
-        travel_time_matrix = {}
-        # TEMP
-        for placeA in places:
-            travel_time_matrix[placeA['loc_id']] = {}
-            for placeB in places:
-                if placeB['tags'] == ['wait'] or placeA['tags'] == ['wait']:
-                    travel_time_matrix[placeA['loc_id']][placeB['loc_id']] = 0
-                else:
-                    travel_time_matrix[placeA['loc_id']][placeB['loc_id']] = sqrt(
-                        (placeA['coordinate'][0] - placeB['coordinate'][0]) ** 2 + (placeA['coordinate'][1] - placeB['coordinate'][1]) ** 2)
-
-        # buffer places and travel_time_matrix ?? maybe update every hours/days
+        travel_time_matrix = self._process_travel_time_for_MCTS(self.db.get_travel_time_matrix())
         return (places, travel_time_matrix)
 
     def get_MCTS_data(self):
@@ -48,20 +35,7 @@ class dataProcesser():
             else:
                 places[value["open_day"].lower()].append(value)
 
-        # use travel time api / db
-        # TODO
-        travel_time_matrix = {}
-        # TEMP
-        for placeA in places["mon"]:
-            travel_time_matrix[placeA['loc_id']] = {}
-            for placeB in places["mon"]:
-                if placeB['loc_id'] == 'wait' or placeA['loc_id'] == 'wait':
-                    travel_time_matrix[placeA['loc_id']][placeB['loc_id']] = 0
-                else:
-                    travel_time_matrix[placeA['loc_id']][placeB['loc_id']] = sqrt(
-                        (placeA['coordinate'][0] - placeB['coordinate'][0]) ** 2 + (placeA['coordinate'][1] - placeB['coordinate'][1]) ** 2)
-
-        # buffer places and travel_time_matrix ?? maybe update every hours/days
+        travel_time_matrix = self._process_travel_time_for_MCTS(self.db.get_travel_time_matrix())
         return (places, travel_time_matrix)
 
     def _process_places_for_MCTS(self, loc_data):
@@ -80,6 +54,13 @@ class dataProcesser():
         df['rating'] = df['rating'].apply(lambda x: float(x))
 
         return df.to_dict('records')
+    
+    def _process_travel_time_for_MCTS(self, travel_time_array):
+        result_dict = defaultdict(dict)
+        for (loc_id_from, loc_id_to, travel_time) in travel_time_array:
+            result_dict[loc_id_from][loc_id_to] = travel_time
+        return dict(result_dict)
+        
 
     def get_places_for_travelTimeAPI(self):
         locations_data = self.db.get_places_coordinate()
@@ -152,11 +133,14 @@ class dataProcesser():
 
         return payloads
 
-    def update_travel_time_matrix(self, travel_time_matrix):
-        # TODO - convert to what?
-
-        self.db.update_travel_time_matrix()
-        pass
+    def update_travel_time_matrix(self, travel_time_matrix : dict, transport : str):
+        # have {a:{b:1}}
+        # want ((a,b,1),(a,c,2))
+        data = []
+        for loc_id_from, value in travel_time_matrix.items():
+            for loc_id_to, travel_time in value.items():
+                data.append((loc_id_from,loc_id_to,travel_time,transport))
+        self.db.update_travel_time_matrix(data)
 
 
 if __name__ == "__main__":
