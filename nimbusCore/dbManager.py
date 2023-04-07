@@ -3,6 +3,7 @@ from dotenv import dotenv_values
 import os
 import json
 
+
 if os.environ.get("VERCEL"):
     secret = os.environ
 else:
