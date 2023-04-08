@@ -7,6 +7,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import copy
 import json
+import os
+import sys
+
+#have this before importing helper so no import error
+sys.path.append(os.path.realpath(os.path.dirname(__file__)))
 
 from helper import timeStringToFloat
 
