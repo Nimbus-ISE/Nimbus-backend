@@ -59,5 +59,5 @@ class MCTS():
     # def _travel_day(self, places, score_matrix: dict, startHour=8, endHour=18):
     #     pass
 
-    def travel_plan(self, start_date: datetime, end_date: datetime, tags: list, must_add: list = None, budget: int = None, food: bool = False):
-        return generatePlan(self.POI_dict_day_of_week['mon'], self.allTags, self.distance_matrix, tags, budget)
+    def travel_plan(self, start_date: datetime, end_date: datetime, tags: list, start_hour: int = 8, end_hour: int = 18, must_add: list = None, budget: int = None, food: bool = False):
+        return generatePlan(self.POI_dict_day_of_week['mon'], self.allTags, self.distance_matrix, tags, startHour=start_hour, endHour=end_hour, budget=budget)
