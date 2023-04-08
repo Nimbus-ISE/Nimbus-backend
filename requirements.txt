@@ -3,5 +3,6 @@ python-dotenv
 psycopg2-binary~=2.9.3
 pandas
 matplotlib
+requests
 
 traveltimepy
