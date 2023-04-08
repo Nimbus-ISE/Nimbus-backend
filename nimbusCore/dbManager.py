@@ -111,9 +111,9 @@ class dbMan(dbManInterface):
     
     @checkConnection
     def update_travel_time_matrix(self, tt_mat):
-        # TODO
         self.cursor.execute("INSERT INTO travel_time (loc_id_from, loc_id_to, travel_time, transport) VALUES " + ','.join(['%s'] * len(tt_mat))
                             ,vars=tuple(tt_mat))
+        self.conn.commit()
 
     @checkConnection
     def get_places_coordinate(self):
@@ -124,4 +124,4 @@ class dbMan(dbManInterface):
 
 if __name__ == "__main__":
     db = dbMan()
-    print(db.get_loc_data_by_day('mon'))
+    # print(db.get_loc_data_by_day('mon'))

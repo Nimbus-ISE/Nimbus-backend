@@ -5,8 +5,12 @@ import time
 import math
 import matplotlib.pyplot as plt
 import numpy as np
+import os
+import sys
 import datetime
 
+# have this before importing helper so no import error
+sys.path.append(os.path.realpath(os.path.dirname(__file__)))
 from helper import timeStringToFloat, minuteFloatToTime, minuteFloatToHourMinSec
 
 
