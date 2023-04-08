@@ -47,7 +47,9 @@ def index():
 def getSampleTrip():
     return json.dumps(TripBuilder.demo_trip())
 
-
+# date in string iso format
+# tags as comma separated string or json
+# budget as int/string 0 - 3
 @app.route('/get_trip_mcts', methods=['POST'])
 def getTripMCTS():
     content_type = request.headers.get('Content-Type')
@@ -69,7 +71,7 @@ def getTripMCTS():
         return 'Missing data field/s in body'
     
     try:
-        return json.dumps(TripBuilder.generate_trip_mcts(start_date=datetime.fromisoformat(data['start_date']), end_date=datetime.fromisoformat(data['end_date']), tags=data['tags'].split(','), must_add=None, budget=data['budget'], food=True))
+        return json.dumps(TripBuilder.generate_trip_mcts(start_date=datetime.fromisoformat(data['start_date']), end_date=datetime.fromisoformat(data['end_date']), tags=data['tags'].split(','), must_add=None, budget=int(data['budget']), food=True))
     except Exception as e:
         logging.exception('An error occurred: %s', str(e))
         return 'error generating plan'
