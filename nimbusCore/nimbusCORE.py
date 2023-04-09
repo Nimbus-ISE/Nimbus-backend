@@ -6,8 +6,8 @@ class TripBuilder():
     def __init__(self):
         self.mcts = MCTS()
 
-    def generate_trip_mcts(self, start_date, end_date, tags, must_add, budget, food):
-        return self.mcts.travel_plan(start_date,end_date,tags,must_add,budget, food)
+    def generate_trip_mcts(self, start_date, end_date, tags, start_hour, end_hour, must_add, budget, food):
+        return self.mcts.travel_plan(start_date,end_date,tags,start_hour,end_hour,must_add,budget, food)
 
     def demo_trip(self):
         return self.mcts.demo_travel_plan()

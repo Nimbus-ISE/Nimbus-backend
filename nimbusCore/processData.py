@@ -58,7 +58,7 @@ class dataProcesser():
     def _process_travel_time_for_MCTS(self, travel_time_array):
         result_dict = defaultdict(dict)
         for (loc_id_from, loc_id_to, travel_time) in travel_time_array:
-            result_dict[loc_id_from][loc_id_to] = travel_time
+            result_dict[loc_id_from][loc_id_to] = int(travel_time)
         return dict(result_dict)
         
 

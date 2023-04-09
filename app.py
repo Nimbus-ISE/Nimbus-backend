@@ -67,11 +67,11 @@ def getTripMCTS():
     except Exception as e:
         logging.exception('An error occurred: %s', str(e))
         return 'Error parsing body'
-    if not {'start_date', 'end_date', 'tags', 'budget'}.issubset(set(data.keys())):
+    if not {'start_date', 'end_date', 'tags', 'budget', 'start_hour', 'end_hour'}.issubset(set(data.keys())):
         return 'Missing data field/s in body'
     
     try:
-        return json.dumps(TripBuilder.generate_trip_mcts(start_date=datetime.fromisoformat(data['start_date']), end_date=datetime.fromisoformat(data['end_date']), tags=data['tags'].split(','), must_add=None, budget=int(data['budget']), food=True))
+        return json.dumps(TripBuilder.generate_trip_mcts(start_date=datetime.fromisoformat(data['start_date']), end_date=datetime.fromisoformat(data['end_date']), tags=data['tags'].split(','), start_hour=data['start_hour'], end_hour=data['end_hour'], must_add=None, budget=int(data['budget']), food=True))
     except Exception as e:
         logging.exception('An error occurred: %s', str(e))
         return 'error generating plan'
