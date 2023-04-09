@@ -34,30 +34,31 @@ class MCTS():
         with open('demo_plan.json', 'r', encoding='utf8') as f:
             return f.read()
 
-    # def travel_plan_v1(self, start_date: datetime, end_date: datetime, tags: list, must_add: list = None):
-    #     delta = end_date - start_date
-    #     date_list = [start_date + timedelta(days=i)
-    #                  for i in range(delta.days + 1)]
-    #     dayRange = [date.strftime('%a').lower() for date in date_list]
-    #     POI_dict_day_of_week = deepcopy(self.POI_dict_day_of_week)
-    #     travel_plan = []
-    #     for day in dayRange:
-    #         self._remove_duplicate(POI_dict_day_of_week[day], travel_plan)
-    #         travel_plan.append(self._travel_day(POI_dict_day_of_week[day],))
+    def travel_plan(self, start_date: datetime, end_date: datetime, tags: list, start_hour: int = 8, end_hour: int = 18, must_add: list = None, budget: int = None):
+        delta = end_date - start_date
+        date_list = [start_date + timedelta(days=i)
+                     for i in range(delta.days + 1)]
+        dayRange = [date.strftime('%a').lower() for date in date_list]
+        POI_dict_day_of_week = deepcopy(self.POI_dict_day_of_week)
+        travel_plan = []
+        for day in dayRange:
+            self._remove_duplicate(POI_dict_day_of_week[day], travel_plan)
+            travel_plan.append(self._travel_day(POI_dict_day_of_week[day],tags,start_hour,end_hour,budget))
 
-    #     return travel_plan
+        return travel_plan
+    
+    @staticmethod
+    def _remove_duplicate(places: list, travel_plan: list):
+        used_place = []
+        for travel_day in travel_plan:
+            for feature in travel_day:
+                if feature['type'] == 'locations':
+                    used_place += [int(feature['loc_id'])]
+        i = 0
+        while i < len(places):
+            if int(places[i]['loc_id']) in used_place:
+                places.pop(i)
+            i += 1
 
-    # def _remove_duplicate(places: list, travel_plan: list):
-    #     for travel_day in travel_plan:
-    #         for used_place in travel_day:
-    #             i = 0
-    #             while i < len(places):
-    #                 if int(places[i]['loc_id']) == int(used_place['loc_id']):
-    #                     places.pop(i)
-    #                 i += 1
-
-    # def _travel_day(self, places, score_matrix: dict, startHour=8, endHour=18):
-    #     pass
-
-    def travel_plan(self, start_date: datetime, end_date: datetime, tags: list, start_hour: int = 8, end_hour: int = 18, must_add: list = None, budget: int = None, food: bool = False):
-        return generatePlan(self.POI_dict_day_of_week['mon'], self.allTags, self.distance_matrix, tags, startHour=start_hour, endHour=end_hour, budget=budget)
+    def _travel_day(self,filtered_POI, tags, start_hour, end_hour, budget):
+        return generatePlan(filtered_POI, self.allTags, self.distance_matrix, tags, startHour=start_hour, endHour=end_hour, budget=budget)
