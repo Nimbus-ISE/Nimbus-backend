@@ -42,7 +42,7 @@ class MCTS():
         POI_dict_day_of_week = deepcopy(self.POI_dict_day_of_week)
         travel_plan = []
         for day in dayRange:
-            self._remove_duplicate(POI_dict_day_of_week[day], travel_plan)
+            POI_dict_day_of_week[day] = self._remove_duplicate(POI_dict_day_of_week[day], travel_plan)
             travel_plan.append(self._travel_day(POI_dict_day_of_week[day],tags,start_hour,end_hour,budget))
 
         return travel_plan
@@ -54,11 +54,7 @@ class MCTS():
             for feature in travel_day:
                 if feature['type'] == 'locations':
                     used_place += [int(feature['loc_id'])]
-        i = 0
-        while i < len(places):
-            if int(places[i]['loc_id']) in used_place:
-                places.pop(i)
-            i += 1
+        return [d for d in places if d["loc_id"] not in used_place]
 
     def _travel_day(self,filtered_POI, tags, start_hour, end_hour, budget):
         return generatePlan(filtered_POI, self.allTags, self.distance_matrix, tags, startHour=start_hour, endHour=end_hour, budget=budget)
