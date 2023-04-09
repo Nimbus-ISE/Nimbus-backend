@@ -21,6 +21,7 @@ def generatePlan(places, tags, distanceMatrix, userSelectedTags, startHour, endH
     # higher C = explore more = run longer
     C = 5
     tagWeight = 2
+    # TODO
     timeModifier = 1
     # time spend ** modifier
     # higher = prefer longer distance but better place score
@@ -28,8 +29,7 @@ def generatePlan(places, tags, distanceMatrix, userSelectedTags, startHour, endH
 
     # convert openHours into correct format
     for i in range(len(places)):
-        new_hours = (timeStringToFloat(
-            places[i]['hours'][0]), timeStringToFloat(places[i]['hours'][1]))
+        new_hours = (timeStringToFloat(places[i]['hours'][0]), timeStringToFloat(places[i]['hours'][1]))
         places[i]['hours'] = new_hours
 
     placesDict = {place['loc_id']: place for place in places}
@@ -39,13 +39,10 @@ def generatePlan(places, tags, distanceMatrix, userSelectedTags, startHour, endH
     placesTagsMatrix = np.array([[tag in place['tags']
                                 for tag in tags] for place in places])
 
-    tagsMatrix = tagWeight * \
-        np.array([(tag in userSelectedTags)
-                 for tag in tags]).reshape((len(tags), 1))
+    tagsMatrix = tagWeight * np.array([(tag in userSelectedTags) for tag in tags]).reshape((len(tags), 1))
 
     # each location tags score
-    tagScores = list(np.matmul(placesTagsMatrix,
-                     tagsMatrix).reshape(len(places)))
+    tagScores = list(np.matmul(placesTagsMatrix, tagsMatrix).reshape(len(places)))
 
     # each location rating score
     ratingScores = np.array([place['rating'] for place in places])
@@ -65,8 +62,7 @@ def generatePlan(places, tags, distanceMatrix, userSelectedTags, startHour, endH
             if 'wait' in x['tags'] or 'wait' in y['tags'] or x['loc_id'] == y['loc_id']:
                 placeScoresMatrix[x['loc_id']][y['loc_id']] = 0
             else:
-                placeScoresMatrix[x['loc_id']][y['loc_id']] = placeScores[y['loc_id']] / (
-                    1 + (distanceMatrix[x['loc_id']][y['loc_id']]))
+                placeScoresMatrix[x['loc_id']][y['loc_id']] = placeScores[y['loc_id']] / (1 + (distanceMatrix[x['loc_id']][y['loc_id']]))
 
     # # MCTS ALGORITHM
     class Node:
@@ -113,8 +109,7 @@ def generatePlan(places, tags, distanceMatrix, userSelectedTags, startHour, endH
         max = float('-inf')
 
         for destNode in startNode.child:
-            score = (calcExploitScore(startNode, destNode) +
-                     calcExploreScore(startNode, destNode))
+            score = (calcExploitScore(startNode, destNode) + calcExploreScore(startNode, destNode))
             if max < score:
                 output_loc_idx = index
                 max = score
@@ -176,12 +171,12 @@ def generatePlan(places, tags, distanceMatrix, userSelectedTags, startHour, endH
                       })
             
         # convert to nice time format
-        for ele in itArr:
-            if ele['type'] == 'locations':
-                ele['arrival_time'] = minuteFloatToTime(ele['arrival_time'])
-                ele['leave_time'] = minuteFloatToTime(ele['leave_time'])
-            # elif ele['type'] == 'travel_dur':
-            #     ele['travel_time'] = minuteFloatToHourMinSec(ele['travel_time'])
+        # for ele in itArr:
+        #     if ele['type'] == 'locations':
+        #         ele['arrival_time'] = minuteFloatToTime(ele['arrival_time'])
+        #         ele['leave_time'] = minuteFloatToTime(ele['leave_time'])
+        #     elif ele['type'] == 'travel_dur':
+        #         ele['travel_time'] = minuteFloatToHourMinSec(ele['travel_time'])
 
         return itArr
 
@@ -195,14 +190,13 @@ def generatePlan(places, tags, distanceMatrix, userSelectedTags, startHour, endH
             # find food place after 11.00
             foodHours = 11
             # if already has food then take place that does not have 'food' tag
-            if pointer.leaveTime < foodHours or hadFood:  # if not food time yet
+            if pointer.leaveTime < foodHours or hadFood: # if not food time yet
                 return 'Restaurant' not in place['tags']
-            # if it's food time!
-            return 'Restaurant' in place['tags']
+     
+            return 'Restaurant' in place['tags'] # if it's food time!
 
         def isLowerThanBudget(place, selectedPlace, budget):
-            curCost = [placesDict[loc_loc_id]['price_level']
-                       for loc_loc_id in selectedPlace]
+            curCost = [placesDict[loc_id]['price_level'] for loc_id in selectedPlace]
 
             return ((sum(curCost) + place['price_level']) / (len(selectedPlace) + 1)) <= budget
 
@@ -250,14 +244,13 @@ def generatePlan(places, tags, distanceMatrix, userSelectedTags, startHour, endH
                     hadFood = True
                 # expansion
                 if pointer.child == []:
-                    availablePlace = getAvailablePlace(
-                        pointer, hadFood, budget)
+                    availablePlace = getAvailablePlace(pointer, hadFood, budget)
                     childrenNodeExpansion(pointer, availablePlace)
 
             # back propagation
             backPropagation(pointer)
 
-        curCost = [placesDict[loc_loc_id]['price_level'] for loc_loc_id in selectedPlace]
+        curCost = [placesDict[loc_id]['price_level'] for loc_id in selectedPlace]
         print('avg price_level:', sum(curCost) / (len(selectedPlace)))
 
         return getOptimalPath(itTree)
@@ -294,7 +287,7 @@ if __name__ == '__main__':
     # special location: wait - wait for next location to open
     waitHalfHour = {
         'loc_id': 'wait',
-        'loc_loc_id': 'wait',
+        'loc_id': 'wait',
         'coordinate': (0, 0),
         'tags': ['wait'],
         'hours': ('0:00', '24:00'),
@@ -358,8 +351,8 @@ if __name__ == '__main__':
     # TEST RUN
     startTimer = time.time()
     print('Generating plan...')
-    print(generatePlan(places=places, tags=tags, distanceMatrix=distanceMatrix,
-                    userSelectedTags=userSelectedTags, startHour=startHour, endHour=endHour, budget=budget))
+    print(generatePlan(places=places, tags=tags, distanceMatrix=distanceMatrix, 
+                       userSelectedTags=userSelectedTags, startHour=startHour, endHour=endHour, budget=budget))
     timeUsed = time.time() - startTimer
     print(f'Runtime : {timeUsed} sec')
 
