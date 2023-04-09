@@ -32,6 +32,9 @@ def minuteFloatToHourMinSec(minute_float):
     hours, seconds_remainder = divmod(duration_in_seconds, 3600)
     minutes, seconds = divmod(seconds_remainder, 60)
 
+    hours = int(hours)
+    minutes = int(minutes)
+
     minutes_unit = 'Mins' if minutes > 1 else 'Min'
     hours_unit = 'Hrs' if hours > 1 else 'Hr'
     
