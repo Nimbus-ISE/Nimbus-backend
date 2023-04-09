@@ -48,6 +48,7 @@ def generatePlan(places, tags, distanceMatrix, userSelectedTags, startHour, endH
 
     # each location tags score
     tagScores = list(np.matmul(placesTagsMatrix, tagsMatrix).reshape(len(places)))
+
     # each location rating score
     ratingScores = np.array([place['rating'] for place in places])
     totalScores = tagScores + ratingScores
@@ -169,7 +170,7 @@ def generatePlan(places, tags, distanceMatrix, userSelectedTags, startHour, endH
                         'arrival_time': pointer.arrivalTime.time(),
                         'leave_time': pointer.leaveTime.time(),
                         })
-            
+
         return itArr
 
     # # Main function
@@ -237,14 +238,13 @@ def generatePlan(places, tags, distanceMatrix, userSelectedTags, startHour, endH
                     hadFood = True
                 # expansion
                 if pointer.child == []:
-                    availablePlace = getAvailablePlace(
-                        pointer, hadFood, budget)
+                    availablePlace = getAvailablePlace(pointer, hadFood, budget)
                     childrenNodeExpansion(pointer, availablePlace)
 
             # back propagation
             backPropagation(pointer)
 
-        curCost = [placesDict[loc_loc_id]['price_level'] for loc_loc_id in selectedPlace]
+        curCost = [placesDict[loc_id]['price_level'] for loc_id in selectedPlace]
         print('avg price_level:', sum(curCost) / (len(selectedPlace)))
 
         return getOptimalPath(itTree)
@@ -346,8 +346,8 @@ if __name__ == '__main__':
     # TEST RUN
     startTimer = time.time()
     print('Generating plan...')
-    print(generatePlan(places=places, tags=tags, distanceMatrix=distanceMatrix,
-                    userSelectedTags=userSelectedTags, startHour=startHour, endHour=endHour, budget=budget))
+    print(generatePlan(places=places, tags=tags, distanceMatrix=distanceMatrix, 
+                       userSelectedTags=userSelectedTags, startHour=startHour, endHour=endHour, budget=budget))
     timeUsed = time.time() - startTimer
     print(f'Runtime : {timeUsed} sec')
 
