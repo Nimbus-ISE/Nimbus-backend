@@ -5,19 +5,18 @@ import time
 import math
 import matplotlib.pyplot as plt
 import numpy as np
-import copy
-import json
 import os
 import sys
+import datetime
 
-#have this before importing helper so no import error
+# have this before importing helper so no import error
 sys.path.append(os.path.realpath(os.path.dirname(__file__)))
+from helper import timeStringToFloat, minuteFloatToTime, minuteFloatToHourMinSec
 
-from helper import timeStringToFloat
 
-    
 def generatePlan(places, tags, distanceMatrix, userSelectedTags, startHour, endHour, budget):
 
+    searchCycle = 10_000
     # C is bias to explore new route
     # higher C = explore more = run longer
     C = 5
@@ -29,7 +28,8 @@ def generatePlan(places, tags, distanceMatrix, userSelectedTags, startHour, endH
 
     # convert openHours into correct format
     for i in range(len(places)):
-        new_hours = (timeStringToFloat(places[i]['hours'][0]), timeStringToFloat(places[i]['hours'][1]))
+        new_hours = (timeStringToFloat(
+            places[i]['hours'][0]), timeStringToFloat(places[i]['hours'][1]))
         places[i]['hours'] = new_hours
 
     placesDict = {place['loc_id']: place for place in places}
@@ -39,10 +39,13 @@ def generatePlan(places, tags, distanceMatrix, userSelectedTags, startHour, endH
     placesTagsMatrix = np.array([[tag in place['tags']
                                 for tag in tags] for place in places])
 
-    tagsMatrix = tagWeight * np.array([(tag in userSelectedTags) for tag in tags]).reshape((len(tags), 1))
+    tagsMatrix = tagWeight * \
+        np.array([(tag in userSelectedTags)
+                 for tag in tags]).reshape((len(tags), 1))
 
     # each location tags score
-    tagScores = list(np.matmul(placesTagsMatrix, tagsMatrix).reshape(len(places)))
+    tagScores = list(np.matmul(placesTagsMatrix,
+                     tagsMatrix).reshape(len(places)))
 
     # each location rating score
     ratingScores = np.array([place['rating'] for place in places])
@@ -62,28 +65,28 @@ def generatePlan(places, tags, distanceMatrix, userSelectedTags, startHour, endH
             if 'wait' in x['tags'] or 'wait' in y['tags'] or x['loc_id'] == y['loc_id']:
                 placeScoresMatrix[x['loc_id']][y['loc_id']] = 0
             else:
-                placeScoresMatrix[x['loc_id']][y['loc_id']] = placeScores[y['loc_id']] / (1 + (distanceMatrix[x['loc_id']][y['loc_id']]))
+                placeScoresMatrix[x['loc_id']][y['loc_id']] = placeScores[y['loc_id']] / (
+                    1 + (distanceMatrix[x['loc_id']][y['loc_id']]))
 
     # # MCTS ALGORITHM
-    
     class Node:
         def __init__(self, place, child=[], parent=None):
             self.loc_id = place['loc_id']
             self.est_time_stay_HR = toHour(place['est_time_stay'])
-        
+
             self.child = child
             self.parent = parent
 
             self.totalReward = 0
             self.visitCount = 0
-            self.nodeReward = None
+            # self.nodeReward = None
 
             if parent is not None:
                 self.travelTime = getTravelTimeHR(self.loc_id, parent.loc_id)  # time to get here
-                self.leaveTime = parent.leaveTime + self.est_time_stay_HR + getTravelTimeHR(self.loc_id, parent.loc_id)
+                self.leaveTime = parent.leaveTime +  self.travelTime + self.est_time_stay_HR
             else:
                 self.travelTime = 0
-                self.leaveTime = startHour
+                self.leaveTime = startHour + self.est_time_stay_HR
 
     def getTravelTimeHR(x, y):
         if x == y or 'wait' in [x, y]:
@@ -98,7 +101,7 @@ def generatePlan(places, tags, distanceMatrix, userSelectedTags, startHour, endH
         if startNode.loc_id == 'wait' and destNode != 'wait':
             while startNode.loc_id == 'wait':
                 startNode = startNode.parent
-                
+
         return placeScoresMatrix[startNode.loc_id][destNode.loc_id]
 
     def calcExploreScore(startNode, destNode):
@@ -111,7 +114,7 @@ def generatePlan(places, tags, distanceMatrix, userSelectedTags, startHour, endH
 
         for destNode in startNode.child:
             score = (calcExploitScore(startNode, destNode) +
-                    calcExploreScore(startNode, destNode))
+                     calcExploreScore(startNode, destNode))
             if max < score:
                 output_loc_idx = index
                 max = score
@@ -137,38 +140,53 @@ def generatePlan(places, tags, distanceMatrix, userSelectedTags, startHour, endH
             node = node.parent
             node.totalReward += totalReward
 
-    def printOptimalPath(itTree): # root
+    def getOptimalPath(itTree):
         pointer = itTree
 
-        global itArr
         itArr = []
-        itArr.append((placesDict[pointer.loc_id], 0)) # starting place
-        
-        print(placesDict[pointer.loc_id])
-        print(f'leave at {pointer.leaveTime} node rewards : {pointer.nodeReward}')
+        # starting place
+        itArr.append({'type': 'locations',
+                      'loc_id': pointer.loc_id,
+                      'arrival_time': startHour,
+                      'leave_time': pointer.leaveTime,
+                      })
 
+        # find max child of all children
         while len(pointer.child) != 0:
+            prev_loc = itArr[len(itArr) - 1]
+
             maxScore = float('-inf')
             index = 0
             for i in range(len(pointer.child)):
                 if pointer.child[i].visitCount > 0 and pointer.child[i].totalReward / pointer.child[i].visitCount > maxScore:
                     index = i
                     maxScore = pointer.child[i].totalReward / pointer.child[i].visitCount
-            pointer = pointer.child[index]
+            pointer = pointer.child[index] # get max child node
 
-            print(placesDict[pointer.loc_id])
-            print(f'DEPART AT {pointer.leaveTime}')
-            temp = copy.deepcopy(placesDict[pointer.loc_id])
-            if pointer.loc_id == ['wait']:
-                temp['coordinate'] = itArr[-1][0]['coordinate']
+            # append max child place to itinerary
+            # append travel duration
+            itArr.append({'type': 'travel_dur',
+                        'travel_time': pointer.travelTime
+                        })
+            # append next location
+            itArr.append({'type': 'locations',
+                      'loc_id': pointer.loc_id,
+                      'arrival_time': prev_loc['leave_time'] + pointer.travelTime,
+                      'leave_time': pointer.leaveTime,
+                      })
+            
+        # convert to nice time format
+        for ele in itArr:
+            if ele['type'] == 'locations':
+                ele['arrival_time'] = minuteFloatToTime(ele['arrival_time'])
+                ele['leave_time'] = minuteFloatToTime(ele['leave_time'])
+            # elif ele['type'] == 'travel_dur':
+            #     ele['travel_time'] = minuteFloatToHourMinSec(ele['travel_time'])
 
-            # itinerary result
-            itArr.append((temp, pointer.leaveTime))
+        return itArr
 
     # # Main function
-
     def mcts(cycle, budget=4, tripPace=2):
-
         def childrenNodeExpansion(placeNode, availablePlace):
             if len(placeNode.child) == 0 and len(availablePlace) != 0:
                 placeNode.child = [Node(p, [], placeNode) for p in availablePlace]
@@ -177,43 +195,45 @@ def generatePlan(places, tags, distanceMatrix, userSelectedTags, startHour, endH
             # find food place after 11.00
             foodHours = 11
             # if already has food then take place that does not have 'food' tag
-            if pointer.leaveTime < foodHours or hadFood: # if not food time yet
+            if pointer.leaveTime < foodHours or hadFood:  # if not food time yet
                 return 'Restaurant' not in place['tags']
             # if it's food time!
             return 'Restaurant' in place['tags']
-        
+
         def isLowerThanBudget(place, selectedPlace, budget):
-            curCost = [placesDict[loc_loc_id]['price_level'] for loc_loc_id in selectedPlace]
-            
+            curCost = [placesDict[loc_loc_id]['price_level']
+                       for loc_loc_id in selectedPlace]
+
             return ((sum(curCost) + place['price_level']) / (len(selectedPlace) + 1)) <= budget
-                
+
         def getAvailablePlace(pointer, hadFood, budget):
-            includeLunch=True
+            includeLunch = True
             if includeLunch:
                 availPlace = [place for place in places if
-                        # time budget
-                        pointer.leaveTime + getTravelTimeHR(pointer.loc_id, place['loc_id']) + toHour(place['est_time_stay']) < endHour
-                        # operating hour
-                        and pointer.leaveTime + getTravelTimeHR(pointer.loc_id, place['loc_id']) >= place['hours'][0]
-                        # operating hour
-                        and pointer.leaveTime + getTravelTimeHR(pointer.loc_id, place['loc_id']) + toHour(place['est_time_stay']) < place['hours'][1]
-                        # not chosen
-                        and place['loc_id'] not in selectedPlace
-                        and takeFood(place, pointer, hadFood)  # food once after noon
-                        and isLowerThanBudget(place, selectedPlace, budget)
-                        ]
-                
+                              # time budget
+                              pointer.leaveTime + getTravelTimeHR(pointer.loc_id, place['loc_id']) + toHour(place['est_time_stay']) < endHour
+                              # operating hour
+                              and pointer.leaveTime + getTravelTimeHR(pointer.loc_id, place['loc_id']) >= place['hours'][0]
+                              # operating hour
+                              and pointer.leaveTime + getTravelTimeHR(pointer.loc_id, place['loc_id']) + toHour(place['est_time_stay']) < place['hours'][1]
+                              # not chosen
+                              and place['loc_id'] not in selectedPlace
+                              # food once after noon
+                              and takeFood(place, pointer, hadFood)
+                              # in budget
+                              and isLowerThanBudget(place, selectedPlace, budget)
+                              ]
+
                 return availPlace
 
-        # TEMP: best score -> first place hehe
+        # TODO : rn best score -> first place hehe
         max_key = max(placeScores, key=placeScores.get)
         firstPlace = placesDict[max_key]
-        
-        # global itTree
+
         itTree = Node(firstPlace)
         selectedPlace = [firstPlace['loc_id']]
-        # generate children nodes for the firstPlace 
-        availablePlace = getAvailablePlace(itTree, False, budget) 
+        # generate children nodes for the firstPlace
+        availablePlace = getAvailablePlace(itTree, False, budget)
         childrenNodeExpansion(itTree, availablePlace)
 
         for _ in range(0, cycle):
@@ -230,7 +250,8 @@ def generatePlan(places, tags, distanceMatrix, userSelectedTags, startHour, endH
                     hadFood = True
                 # expansion
                 if pointer.child == []:
-                    availablePlace = getAvailablePlace(pointer, hadFood, budget)
+                    availablePlace = getAvailablePlace(
+                        pointer, hadFood, budget)
                     childrenNodeExpansion(pointer, availablePlace)
 
             # back propagation
@@ -238,42 +259,30 @@ def generatePlan(places, tags, distanceMatrix, userSelectedTags, startHour, endH
 
         curCost = [placesDict[loc_loc_id]['price_level'] for loc_loc_id in selectedPlace]
         print('avg price_level:', sum(curCost) / (len(selectedPlace)))
-        print('selected place_loc_id:', selectedPlace)
-        printOptimalPath(itTree)
 
-    # # output
-    # algo params
-    POINUM = len(places)
-    searchCycle = 10_000
+        return getOptimalPath(itTree)
 
-    startTimer = time.time()
-    mcts(searchCycle, budget=budget)
-    timeUsed = time.time() - startTimer
-    print("-----------------------")
-    print(f"finish in {timeUsed} second")
-    print(f"with {POINUM} POI and {searchCycle} search cycle")
-    print(f"selected tags : {userSelectedTags}")
-    print(f"start hours : {startHour}")
-    print(f"end hours : {endHour}")
+    # print graph for debug
+    # def printGraph():
+    #     # print(itArr)
+    #     x = [place[0]['coordinate'][0] for place in itArr]
+    #     y = [place[0]['coordinate'][1] for place in itArr]
+    #     placeName = [place[0]['loc_name'] for place in itArr]
+    #     placeTags = [place[0]['tags'] for place in itArr]
+    #     leaveTime = [round(place[1], 2) for place in itArr]
 
+    #     fig, ax = plt.subplots()
+    #     ax.plot(x, y)
 
-    def printGraph():
-        # print(itArr)
-        x = [place[0]['coordinate'][0] for place in itArr]
-        y = [place[0]['coordinate'][1] for place in itArr]
-        placeName = [place[0]['loc_name'] for place in itArr]
-        placeTags = [place[0]['tags'] for place in itArr]
-        leaveTime = [round(place[1],2) for place in itArr]
+    #     for i, placeTag in enumerate(placeTags):
+    #         ax.annotate(
+    #             f'{str(i + 1)} {placeName[i]} {itArr[i][0]["hours"]} {str(placeTag)} LT: {str(leaveTime[i])}', (x[i], y[i]))
 
-        fig, ax = plt.subplots()
-        ax.plot(x, y)
-
-        for i, placeTag in enumerate(placeTags):
-            ax.annotate(f'{str(i + 1)} {placeName[i]} {itArr[i][0]["hours"]} {str(placeTag)} LT: {str(leaveTime[i])}', (x[i], y[i]))
-
-        plt.show()
+    #     plt.show()
 
     # printGraph()
+
+    return mcts(searchCycle, budget=budget)
 
 
 if __name__ == '__main__':
@@ -296,7 +305,7 @@ if __name__ == '__main__':
 
     tags = [
         "Restaurant",
-        "Hloc_idden Gem",
+        "Hidden Gem",
         "Mall",
         "Religion",
         "Nature",
@@ -330,7 +339,7 @@ if __name__ == '__main__':
     with open('locations.txt', 'r', encoding='utf-8') as file:
         data = file.read()
         places = eval(data)
-    places = places['mon'] # get monday only for now
+    places = places['mon']  # get monday only for now
     places.append(waitHalfHour)
 
     # # calculate distance matrix
@@ -340,11 +349,17 @@ if __name__ == '__main__':
         distanceMatrix = eval(data)
 
     # # User params
-
-    userSelectedTags = [tag for tag in tags if randInt(1)] # generate random userSelectedTags params
+    # generate random userSelectedTags params
+    userSelectedTags = [tag for tag in tags if randInt(1)]
     startHour = 9
     endHour = 16
     budget = 3
 
+    # TEST RUN
+    startTimer = time.time()
     print('Generating plan...')
-    generatePlan(places=places, tags=tags, distanceMatrix=distanceMatrix, userSelectedTags=userSelectedTags, startHour=startHour, endHour=endHour, budget=budget)
+    print(generatePlan(places=places, tags=tags, distanceMatrix=distanceMatrix,
+                    userSelectedTags=userSelectedTags, startHour=startHour, endHour=endHour, budget=budget))
+    timeUsed = time.time() - startTimer
+    print(f'Runtime : {timeUsed} sec')
+
