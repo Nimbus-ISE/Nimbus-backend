@@ -15,16 +15,11 @@ sys.path.append(os.path.realpath(os.path.dirname(__file__)))
 from helper import timeStringToTime
 
 
-def generatePlan(params):
-    places = params['places']
-    tags = params['tags']
-    distanceMatrix = params['distanceMatrix']
-    userSelectedTags = params['userSelectedTags']
-    budget = params['budget']
+def generatePlan(places, tags, distanceMatrix, userSelectedTags, budget):
+    # Algo params
     startHour = datetime.datetime(2023, 4, 9, 9, 0) # year month day hour min
     endHour = datetime.datetime(2023, 4, 9, 16, 0)
 
-    # Algo params
     searchCycle = 10_000
     # C is bias to explore new route
     # higher C = explore more = run longer
@@ -347,22 +342,16 @@ if __name__ == '__main__':
     # generate random userSelectedTags params
     userSelectedTags = [tag for tag in tags if randInt(1)]
     budget = 3
-
-    params = {
-        'places': places,
-        'tags': tags,
-        'distanceMatrix': distanceMatrix,
-        'userSelectedTags': userSelectedTags,
-        'budget': budget
-    }
     
     # TODO change parameters to dict object
     # TEST RUN
     startTimer = time.time()
     print('Generating plan...')
-    # print(generatePlan(places=places, tags=tags, distanceMatrix=distanceMatrix, 
-    #                    userSelectedTags=userSelectedTags, startHour=startHour, endHour=endHour, budget=budget))
-    print(generatePlan(params))
+    print(generatePlan(places=places, 
+                       tags=tags, 
+                       distanceMatrix=distanceMatrix,  
+                       userSelectedTags=userSelectedTags, 
+                       budget=budget))
     timeUsed = time.time() - startTimer
     print(f'Runtime : {timeUsed} sec')
 
