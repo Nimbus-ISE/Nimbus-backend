@@ -16,8 +16,10 @@ sys.path.append(os.path.realpath(os.path.dirname(__file__)))
 from helper import timeStringToTime
 
 
-def generatePlan(places, tags, distanceMatrix_from_above, userSelectedTags, budget):
+def generatePlan(places, tags, distanceMatrix_from_above, walkMatrix, userSelectedTags, budget):
+    # deep copy to avoid overwriting variables
     distanceMatrix = copy.deepcopy(distanceMatrix_from_above)
+    walkMatrix = copy.deepcopy(walkMatrix)
     
     # Algo params
     startHour = datetime.datetime(2023, 4, 9, 9, 0) # year month day hour min
@@ -72,8 +74,7 @@ def generatePlan(places, tags, distanceMatrix_from_above, userSelectedTags, budg
             if 'wait' in x['tags'] or 'wait' in y['tags'] or x['loc_id'] == y['loc_id']:
                 placeScoresMatrix[x['loc_id']][y['loc_id']] = 0
             else:
-                placeScoresMatrix[x['loc_id']][y['loc_id']] = placeScores[y['loc_id']] 
-                    # / (1 + (distanceMatrix[x['loc_id']][y['loc_id']])) # TODO remove distance cal for now
+                placeScoresMatrix[x['loc_id']][y['loc_id']] = placeScores[y['loc_id']] / (1 + (distanceMatrix[x['loc_id']][y['loc_id']]).total_seconds()) # TODO remove distance cal for now
 
     def getTravelDuration(x, y):
         if x == y or 'wait' in [x, y]:
@@ -261,7 +262,7 @@ def generatePlan(places, tags, distanceMatrix_from_above, userSelectedTags, budg
         all_places = [placeDict[loc_id] for loc_id in placeDict.keys()]
         x = [place['coordinate'][0] for place in all_places]
         y = [place['coordinate'][1] for place in all_places]
-        
+
         # in it
         places = [place for place in itArr if place['type'] == 'locations']
         lat = [placeDict[place['loc_id']]['coordinate'][0] for place in places]
@@ -275,7 +276,6 @@ def generatePlan(places, tags, distanceMatrix_from_above, userSelectedTags, budg
 
         for i, place in enumerate(places):
             plt.annotate(f'{i + 1} {placeName[i]} {placeHour[i]}', (lat[i], long[i]))
-
 
         plt.show()
 
@@ -344,6 +344,10 @@ if __name__ == '__main__':
     with open('driving.txt', 'r', encoding='utf-8') as file:
         data = file.read()
         distanceMatrix = eval(data)
+
+    with open('walking.txt', 'r', encoding='utf-8') as file:
+        data = file.read()
+        walkMatrix = eval(data)
         
     # # testing user params
     # generate random userSelectedTags params
@@ -357,6 +361,7 @@ if __name__ == '__main__':
     print(generatePlan(places=places, 
                        tags=tags, 
                        distanceMatrix_from_above=distanceMatrix,  
+                       walkMatrix=walkMatrix,
                        userSelectedTags=userSelectedTags, 
                        budget=budget))
     timeUsed = time.time() - startTimer
