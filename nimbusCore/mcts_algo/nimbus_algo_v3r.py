@@ -24,12 +24,9 @@ def generatePlan(places, tags, distanceMatrix_from_above, walkMatrix, userSelect
     # Algo params
     startHour = datetime.datetime(2023, 4, 9, 9, 0) # year month day hour min
     endHour = datetime.datetime(2023, 4, 9, 16, 0)
-
-    searchCycle = 10_000
-    # C is bias to explore new route
-    # higher C = explore more = run longer
-    C = 5
+    searchCycle = 20_000
     tagWeight = 2
+    C = 5 # C is bias to explore new route
     # TODO
     timeModifier = 1
     # time spend ** modifier
@@ -46,9 +43,22 @@ def generatePlan(places, tags, distanceMatrix_from_above, walkMatrix, userSelect
     for start in distanceMatrix.keys():
         for dest in distanceMatrix[start].keys():
             distanceMatrix[start][dest] = datetime.timedelta(minutes=distanceMatrix[start][dest])
-
-    # generate place dis
+    
+    startNode = {
+        'loc_id': 'start',
+        'loc_name': 'start',
+        'coordinate': (0, 0),
+        'tags': ['start'],
+        'hours': ('0:00', '24:00'),
+        'rating': 0,
+        'est_time_stay': datetime.timedelta(),
+        'price_level': 0,
+    }
+    startNode['hours'] = (timeStringToTime(startNode['hours'][0]), timeStringToTime(startNode['hours'][1]))
+        
+    # generate place dict
     placesDict = {place['loc_id']: place for place in places}
+    placesDict['start'] = startNode
 
     # # calculate score
     placesTagsMatrix = np.array([[tag in place['tags'] for tag in tags] for place in places])
@@ -64,20 +74,22 @@ def generatePlan(places, tags, distanceMatrix_from_above, walkMatrix, userSelect
     placeScores = {}
     for i in range(len(totalScores)):
         placeScores[places[i]['loc_id']] = totalScores[i]
-
+    placeScores['start'] = 0
+    
     # scoring criteria: tag + rating + distance
     placeScoresMatrix = {}
     for x in places:
         placeScoresMatrix[x['loc_id']] = {}
 
         for y in places:
-            if 'wait' in x['tags'] or 'wait' in y['tags'] or x['loc_id'] == y['loc_id']:
+            if 'wait' in x['tags'] or 'wait' in y['tags'] or x['loc_id'] == y['loc_id'] or 'start' in x['tags']:
                 placeScoresMatrix[x['loc_id']][y['loc_id']] = 0
             else:
                 placeScoresMatrix[x['loc_id']][y['loc_id']] = placeScores[y['loc_id']] / (1 + (distanceMatrix[x['loc_id']][y['loc_id']]).total_seconds()) # TODO remove distance cal for now
+    placeScoresMatrix['start'] = {place['loc_id'] : 0 for place in places}
 
     def getTravelDuration(x, y):
-        if x == y or 'wait' in [x, y]:
+        if x == y or 'wait' in [x, y] or 'start' in [x, y]:
             return datetime.timedelta() # 0
 
         return distanceMatrix[x][y]
@@ -116,14 +128,14 @@ def generatePlan(places, tags, distanceMatrix_from_above, walkMatrix, userSelect
     def selection(startNode):
         index = 0
         output_loc_idx = 0
-        max = float('-inf')
+        max_score = float('-inf')
 
         # get highest child
         for destNode in startNode.child:
             score = (calcExploitScore(startNode, destNode) + calcExploreScore(startNode, destNode))
-            if max < score:
+            if max_score < score:
                 output_loc_idx = index
-                max = score
+                max_score = score
             index += 1
 
         return startNode.child[output_loc_idx]
@@ -131,11 +143,13 @@ def generatePlan(places, tags, distanceMatrix_from_above, walkMatrix, userSelect
     def backPropagation(leaf):
         node = leaf
         totalReward = placeScoresMatrix[node.parent.loc_id][node.loc_id]
+
         node.visitCount += 1
         while node.parent.parent is not None:
             node = node.parent
             totalReward += placeScoresMatrix[node.parent.loc_id][node.loc_id]
             node.visitCount += 1
+        node.parent.visitCount += 1
 
         # update totalReward
         node = leaf
@@ -145,16 +159,19 @@ def generatePlan(places, tags, distanceMatrix_from_above, walkMatrix, userSelect
             node.totalReward += totalReward
 
     # to get the best path from the Monte Carlo Tree
-    def getOptimalPath(itTree):
-        pointer = itTree
+    def getOptimalPath(treeRoot):
+        pointer = treeRoot
 
         itArr = [] # itinerary list
-        # starting place
-        itArr.append({'type': 'locations',
-                      'loc_id': pointer.loc_id,
-                      'arrival_time': startHour.time().isoformat(),
-                      'leave_time': pointer.leaveTime.time().isoformat(),
-                      })
+        # start place
+        # itArr.append({'type': 'locations',
+        #               'loc_id': pointer.loc_id,
+        #               'arrival_time': startHour.time().isoformat(),
+        #               'leave_time': pointer.leaveTime.time().isoformat(),
+        #               'reward': pointer.totalReward / pointer.visitCount,
+        #               'totalReward': pointer.totalReward,
+        #               'visitCount': pointer.visitCount,
+        #               })
 
         while len(pointer.child) != 0:
             # find max child of all children
@@ -176,10 +193,13 @@ def generatePlan(places, tags, distanceMatrix_from_above, walkMatrix, userSelect
                         'loc_id': pointer.loc_id,
                         'arrival_time': pointer.arrivalTime.time().isoformat(),
                         'leave_time': pointer.leaveTime.time().isoformat(),
+                        # 'reward': pointer.totalReward / pointer.visitCount,
+                        # 'totalReward': pointer.totalReward,
+                        # 'visitCount': pointer.visitCount,
                         })
 
-        printGraph(itArr, placesDict)
-        return itArr
+        printGraph(itArr[1:], placesDict)
+        return itArr[1:]
 
     # # Main function
     def mcts(cycle, budget=4, tripPace=2):
@@ -222,28 +242,30 @@ def generatePlan(places, tags, distanceMatrix_from_above, walkMatrix, userSelect
                 return availPlace
 
         # TODO : rn best score -> first place hehe
-        max_key = max(placeScores, key=placeScores.get)
-        firstPlace = placesDict[max_key]
+        # loc_id = max(placeScores, key=placeScores.get)
+        # firstPlace = placesDict[loc_id]
 
-        itTree = Node(firstPlace)
-        selectedPlace = [firstPlace['loc_id']]
+        treeRoot = Node(placesDict['start'])
+        selectedPlace = []
         # generate children nodes for the firstPlace
-        availablePlace = getAvailablePlace(itTree, False, budget)
-        childrenNodeExpansion(itTree, availablePlace)
+        availablePlace = getAvailablePlace(treeRoot, False, budget)
+        childrenNodeExpansion(treeRoot, availablePlace)
 
         for _ in range(0, cycle):
             # simulation
-            pointer = itTree
+            pointer = treeRoot
             selectedPlace = []
             hadFood = False
 
             while pointer.child != []:
                 # selection
                 pointer = selection(pointer)
+
                 if pointer.loc_id != 'wait':
                     selectedPlace += [pointer.loc_id]
                 if 'Restaurant' in placesDict[pointer.loc_id]['tags']:
                     hadFood = True
+
                 # expansion
                 if pointer.child == []:
                     availablePlace = getAvailablePlace(pointer, hadFood, budget)
@@ -255,7 +277,7 @@ def generatePlan(places, tags, distanceMatrix_from_above, walkMatrix, userSelect
         curCost = [placesDict[loc_id]['price_level'] for loc_id in selectedPlace]
         print('avg price_level:', sum(curCost) / (len(selectedPlace)))
 
-        return getOptimalPath(itTree)
+        return getOptimalPath(treeRoot), treeRoot
 
     # print graph for debug
     def printGraph(itArr, placeDict):
@@ -272,7 +294,7 @@ def generatePlan(places, tags, distanceMatrix_from_above, walkMatrix, userSelect
 
         plt.figure(figsize=(8, 8))
         plt.plot(lat, long)
-        plt.scatter(x, y)
+        # plt.scatter(x, y)
 
         for i, place in enumerate(places):
             plt.annotate(f'{i + 1} {placeName[i]} {placeHour[i]}', (lat[i], long[i]))
@@ -286,19 +308,7 @@ if __name__ == '__main__':
     random.seed(time.time())
 
     def randInt(n):
-        return math.floor((n+1)*random.random())
-
-    # special location: wait - wait for next location to open
-    waitHalfHour = {
-        'loc_id': 'wait',
-        'loc_name': 'wait',
-        'coordinate': (0, 0),
-        'tags': ['wait'],
-        'hours': ('0:00', '24:00'),
-        'rating': 0,
-        'est_time_stay': 30,
-        'price_level': 0,
-    }
+        return math.floor((n + 1) * random.random())
 
     tags = [
         "Restaurant",
@@ -332,6 +342,18 @@ if __name__ == '__main__':
         "Buffet",
     ]
 
+    # special location: wait - wait for next location to open
+    waitHalfHour = {
+        'loc_id': 'wait',
+        'loc_name': 'wait',
+        'coordinate': (0, 0),
+        'tags': ['wait'],
+        'hours': ('0:00', '24:00'),
+        'rating': 0,
+        'est_time_stay': 30,
+        'price_level': 0,
+    }
+
     # real places
     with open('locations.txt', 'r', encoding='utf-8') as file:
         data = file.read()
@@ -358,12 +380,15 @@ if __name__ == '__main__':
     # TEST RUN
     startTimer = time.time()
     print('Generating plan...')
-    print(generatePlan(places=places, 
+
+    plan, treeRoot = generatePlan(places=places, 
                        tags=tags, 
                        distanceMatrix_from_above=distanceMatrix,  
                        walkMatrix=walkMatrix,
                        userSelectedTags=userSelectedTags, 
-                       budget=budget))
-    timeUsed = time.time() - startTimer
-    print(f'Runtime : {timeUsed} sec')
+                       budget=budget)
+    
+    print(plan)
+    print(userSelectedTags)
+    print(f'Runtime : {time.time() - startTimer} sec')
 
