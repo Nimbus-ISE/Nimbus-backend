@@ -8,6 +8,7 @@ import numpy as np
 import os
 import sys
 import datetime
+import copy
 
 # have this before importing helper so no import error
 sys.path.append(os.path.realpath(os.path.dirname(__file__)))
@@ -15,7 +16,9 @@ sys.path.append(os.path.realpath(os.path.dirname(__file__)))
 from helper import timeStringToTime
 
 
-def generatePlan(places, tags, distanceMatrix, userSelectedTags, budget):
+def generatePlan(places, tags, distanceMatrix_from_above, userSelectedTags, budget):
+    distanceMatrix = copy.deepcopy(distanceMatrix_from_above)
+    
     # Algo params
     startHour = datetime.datetime(2023, 4, 9, 9, 0) # year month day hour min
     endHour = datetime.datetime(2023, 4, 9, 16, 0)
@@ -148,8 +151,8 @@ def generatePlan(places, tags, distanceMatrix, userSelectedTags, budget):
         # starting place
         itArr.append({'type': 'locations',
                       'loc_id': pointer.loc_id,
-                      'arrival_time': startHour.time(),
-                      'leave_time': pointer.leaveTime.time(),
+                      'arrival_time': startHour.time().isoformat(),
+                      'leave_time': pointer.leaveTime.time().isoformat(),
                       })
 
         while len(pointer.child) != 0:
@@ -165,13 +168,13 @@ def generatePlan(places, tags, distanceMatrix, userSelectedTags, budget):
             # append max child place to itinerary
             # append travel duration
             itArr.append({'type': 'travel_dur',
-                        'travel_dur': pointer.travelDuration
+                        'travel_dur': pointer.travelDuration.seconds
                         })
             # append next location
             itArr.append({'type': 'locations',
                         'loc_id': pointer.loc_id,
-                        'arrival_time': pointer.arrivalTime.time(),
-                        'leave_time': pointer.leaveTime.time(),
+                        'arrival_time': pointer.arrivalTime.time().isoformat(),
+                        'leave_time': pointer.leaveTime.time().isoformat(),
                         })
 
         return itArr
