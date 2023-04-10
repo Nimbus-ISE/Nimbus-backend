@@ -11,24 +11,24 @@ class MCTS():
 
     def __init__(self):
         self.dataProcessor = dataProcesser()
-        self.POI_dict_day_of_week, self.distance_matrix = self.dataProcessor.get_MCTS_data()
+        self.POI_dict_day_of_week, self.driving_time_matrix, self.walking_time_matrix = self.dataProcessor.get_MCTS_data()
         self.allTags = self.dataProcessor.db.get_all_tags()
 
     def update_data(self):
         #TODO trigger update for ttapi if tt not include all place
-        self.POI_dict_day_of_week, self.distance_matrix = self.dataProcessor.get_MCTS_data()
+        self.POI_dict_day_of_week, self.driving_time_matrix, self.walking_time_matrix = self.dataProcessor.get_MCTS_data()
         return "OK"
 
     # deprecated?
     def save_data(self):
         file = open(data_file, "wb")
-        pickle.dump((self.POI_dict_day_of_week, self.distance_matrix), file)
+        pickle.dump((self.POI_dict_day_of_week, self.driving_time_matrix), file)
         file.close()
 
     # deprecated?
     def load_data(self):
         with open(data_file, 'rb') as f:
-            (self.POI_dict_day_of_week, self.distance_matrix) = pickle.load(f)
+            (self.POI_dict_day_of_week, self.driving_time_matrix) = pickle.load(f)
 
     def demo_travel_plan(self):
         with open('demo_plan.json', 'r', encoding='utf8') as f:
@@ -57,4 +57,4 @@ class MCTS():
         return [d for d in places if d["loc_id"] not in used_place]
 
     def _travel_day(self,filtered_POI, tags, start_hour, end_hour, budget):
-        return generatePlan(filtered_POI, self.allTags, self.distance_matrix, tags, startHour=start_hour, endHour=end_hour, budget=budget)
+        return generatePlan(filtered_POI, self.allTags, self.driving_time_matrix, tags, startHour=start_hour, endHour=end_hour, budget=budget)

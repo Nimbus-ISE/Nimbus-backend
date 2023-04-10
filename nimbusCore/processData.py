@@ -23,8 +23,9 @@ class dataProcesser():
         loc_data = self.db.get_loc_data_by_day(day)
         places = self._process_places_for_MCTS(loc_data)
 
-        travel_time_matrix = self._process_travel_time_for_MCTS(self.db.get_travel_time_matrix())
-        return (places, travel_time_matrix)
+        driving_time_matrix = self._process_travel_time_for_MCTS(self.db.get_travel_time_matrix('driving'))
+        walking_time_matrix = self._process_travel_time_for_MCTS(self.db.get_travel_time_matrix('walking'))
+        return (places, driving_time_matrix, walking_time_matrix)
 
     def get_MCTS_data(self):
         loc_datas = self._process_places_for_MCTS(self.db.get_loc_data())
@@ -35,9 +36,10 @@ class dataProcesser():
             else:
                 places[value["open_day"].lower()].append(value)
 
-        travel_time_matrix = self._process_travel_time_for_MCTS(self.db.get_travel_time_matrix())
-        return (places, travel_time_matrix)
-
+        driving_time_matrix = self._process_travel_time_for_MCTS(self.db.get_travel_time_matrix('driving'))
+        walking_time_matrix = self._process_travel_time_for_MCTS(self.db.get_travel_time_matrix('walking'))
+        return (places, driving_time_matrix, walking_time_matrix)
+    
     def _process_places_for_MCTS(self, loc_data):
         df = pd.DataFrame.from_records(
             loc_data['data'], columns=loc_data['cols'])

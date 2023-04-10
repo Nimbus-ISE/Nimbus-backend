@@ -11,7 +11,7 @@ class TestProcessData(unittest.TestCase):
         del self.dataProcessor
 
     def test_get_MCTS_data(self):
-        print(self.dataProcessor.get_MCTS_data_by_day('mon'))
+        print(self.dataProcessor.get_MCTS_data_by_day('mon', transport='driving'))
 
 
 if __name__ == "__main__":
