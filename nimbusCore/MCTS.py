@@ -43,7 +43,7 @@ class MCTS():
         travel_plan = []
         for day in dayRange:
             POI_dict_day_of_week[day] = self._remove_duplicate(POI_dict_day_of_week[day], travel_plan)
-            travel_plan.append(self._travel_day(POI_dict_day_of_week[day],tags,start_hour,end_hour,budget))
+            travel_plan.append(self._travel_day(POI_dict_day_of_week[day],tags,budget))
 
         return travel_plan
     
