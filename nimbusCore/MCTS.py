@@ -57,4 +57,13 @@ class MCTS():
         return [d for d in places if d["loc_id"] not in used_place]
 
     def _travel_day(self,filtered_POI, tags, start_hour, end_hour, budget):
-        return generatePlan(filtered_POI, self.allTags, self.driving_time_matrix, tags, startHour=start_hour, endHour=end_hour, budget=budget)
+        params = {
+            'places' : filtered_POI,
+            'tags' : self.allTags,
+            'distanceMatrix' : self.driving_time_matrix,
+            'userSelectedTags' : tags,
+            'startHour' : start_hour,
+            'endHour' : end_hour,
+            'budget' : budget, 
+        }
+        return generatePlan(params)
