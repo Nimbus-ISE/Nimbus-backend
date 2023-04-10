@@ -16,13 +16,13 @@ from helper import timeStringToTime
 
 
 def generatePlan(params):
-    params['places'] = places,
-    params['tags'] = tags,
-    params['distanceMatrix'] = distanceMatrix,
-    params['userSelectedTags'] = userSelectedTags,
-    params['startHour'] = startHour,
-    params['endHour'] = endHour,
-    params['budget'] = budget
+    places = params['places']
+    tags = params['tags']
+    distanceMatrix = params['distanceMatrix']
+    userSelectedTags = params['userSelectedTags']
+    budget = params['budget']
+    startHour = datetime.datetime(2023, 4, 9, 9, 0) # year month day hour min
+    endHour = datetime.datetime(2023, 4, 9, 16, 0)
 
     # Algo params
     searchCycle = 10_000
@@ -301,12 +301,12 @@ if __name__ == '__main__':
     tags = [
         "Restaurant",
         "Hidden Gem",
+        "Must See Attraction",
         "Mall",
         "Religion",
         "Nature",
         "Temple",
         "Shopping",
-        "Must See Attraction",
         "Beach",
         "Local Culture",
         "Luxury",
@@ -346,8 +346,6 @@ if __name__ == '__main__':
     # # User params
     # generate random userSelectedTags params
     userSelectedTags = [tag for tag in tags if randInt(1)]
-    startHour = datetime.datetime(2023, 4, 9, 9, 0) # year month day hour min
-    endHour = datetime.datetime(2023, 4, 9, 16, 0)
     budget = 3
 
     params = {
@@ -355,10 +353,9 @@ if __name__ == '__main__':
         'tags': tags,
         'distanceMatrix': distanceMatrix,
         'userSelectedTags': userSelectedTags,
-        'startHour': startHour,
-        'endHour': endHour,
         'budget': budget
     }
+    
     # TODO change parameters to dict object
     # TEST RUN
     startTimer = time.time()
