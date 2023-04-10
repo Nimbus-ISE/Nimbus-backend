@@ -258,18 +258,25 @@ def generatePlan(places, tags, distanceMatrix_from_above, userSelectedTags, budg
 
     # print graph for debug
     def printGraph(itArr, placeDict):
+        all_places = [placeDict[loc_id] for loc_id in placeDict.keys()]
+        x = [place['coordinate'][0] for place in all_places]
+        y = [place['coordinate'][1] for place in all_places]
+        
+        # in it
         places = [place for place in itArr if place['type'] == 'locations']
-
         lat = [placeDict[place['loc_id']]['coordinate'][0] for place in places]
         long = [placeDict[place['loc_id']]['coordinate'][1] for place in places]
         placeName = [placeDict[place['loc_id']]['loc_name'] for place in places]
         placeHour = [placeDict[place['loc_id']]['hours'] for place in places]
 
-        fig, ax = plt.subplots()
-        ax.plot(lat, long)
+        plt.figure(figsize=(8, 8))
+        plt.plot(lat, long)
+        plt.scatter(x, y)
 
         for i, place in enumerate(places):
-            ax.annotate(f'{i + 1} {placeName[i]} {placeHour[i]}', (lat[i], long[i]))
+            plt.annotate(f'{i + 1} {placeName[i]} {placeHour[i]}', (lat[i], long[i]))
+
+
         plt.show()
 
     return mcts(searchCycle, budget=budget)
@@ -330,7 +337,7 @@ if __name__ == '__main__':
         data = file.read()
         places = eval(data)
     places = places['mon']  # get monday only for now
-    places.append(waitHalfHour)
+    # places.append(waitHalfHour)
 
     # # calculate distance matrix
     # real distances
