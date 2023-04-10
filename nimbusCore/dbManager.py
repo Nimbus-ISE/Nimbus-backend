@@ -3,12 +3,8 @@ from dotenv import dotenv_values
 import os
 import json
 
-
-if os.environ.get("VERCEL"):
-    secret = os.environ
-else:
-    secret = dotenv_values(dotenv_path=os.path.realpath(
-        os.path.dirname(__file__)) + '\..\.env')
+secret = dotenv_values(dotenv_path=os.path.join(os.path.realpath(
+    os.path.dirname(__file__)),'..','.env'))
 
 class dbManInterface():
     def __init__():
@@ -104,7 +100,7 @@ class dbMan(dbManInterface):
     @checkConnection
     def get_travel_time_matrix(self, transport = 'driving'):
         self.cursor.execute("""
-                            SELECT loc_id_from,loc_id_to,travel_time from travel_time where transport = %s 
+                            SELECT loc_id_from,loc_id_to,travel_time from travel_time where transport = %s
                             """, vars=(transport,))
         
         return self.cursor.fetchall()
