@@ -29,7 +29,7 @@ logger.addHandler(ch)
 
 
 secret = dotenv_values(dotenv_path=os.path.join(os.path.realpath(
-    os.path.dirname(__file__)),'..','.env'))
+    os.path.dirname(__file__)),'.env'))
 
 valid_api_keys = secret['valid_api_keys'].split(',')
 
