@@ -177,6 +177,7 @@ def generatePlan(places, tags, distanceMatrix_from_above, userSelectedTags, budg
                         'leave_time': pointer.leaveTime.time().isoformat(),
                         })
 
+        printGraph(itArr, placesDict)
         return itArr
 
     # # Main function
@@ -256,24 +257,20 @@ def generatePlan(places, tags, distanceMatrix_from_above, userSelectedTags, budg
         return getOptimalPath(itTree)
 
     # print graph for debug
-    # def printGraph():
-    #     # print(itArr)
-    #     x = [place[0]['coordinate'][0] for place in itArr]
-    #     y = [place[0]['coordinate'][1] for place in itArr]
-    #     placeName = [place[0]['loc_name'] for place in itArr]
-    #     placeTags = [place[0]['tags'] for place in itArr]
-    #     leaveTime = [round(place[1], 2) for place in itArr]
+    def printGraph(itArr, placeDict):
+        places = [place for place in itArr if place['type'] == 'locations']
 
-    #     fig, ax = plt.subplots()
-    #     ax.plot(x, y)
+        lat = [placeDict[place['loc_id']]['coordinate'][0] for place in places]
+        long = [placeDict[place['loc_id']]['coordinate'][1] for place in places]
+        placeName = [placeDict[place['loc_id']]['loc_name'] for place in places]
+        placeHour = [placeDict[place['loc_id']]['hours'] for place in places]
 
-    #     for i, placeTag in enumerate(placeTags):
-    #         ax.annotate(
-    #             f'{str(i + 1)} {placeName[i]} {itArr[i][0]["hours"]} {str(placeTag)} LT: {str(leaveTime[i])}', (x[i], y[i]))
+        fig, ax = plt.subplots()
+        ax.plot(lat, long)
 
-    #     plt.show()
-
-    # printGraph()
+        for i, place in enumerate(places):
+            ax.annotate(f'{i + 1} {placeName[i]} {placeHour[i]}', (lat[i], long[i]))
+        plt.show()
 
     return mcts(searchCycle, budget=budget)
 
@@ -341,7 +338,7 @@ if __name__ == '__main__':
         data = file.read()
         distanceMatrix = eval(data)
         
-    # # User params
+    # # testing user params
     # generate random userSelectedTags params
     userSelectedTags = [tag for tag in tags if randInt(1)]
     budget = 3
@@ -352,7 +349,7 @@ if __name__ == '__main__':
     print('Generating plan...')
     print(generatePlan(places=places, 
                        tags=tags, 
-                       distanceMatrix=distanceMatrix,  
+                       distanceMatrix_from_above=distanceMatrix,  
                        userSelectedTags=userSelectedTags, 
                        budget=budget))
     timeUsed = time.time() - startTimer
