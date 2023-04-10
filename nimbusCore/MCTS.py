@@ -34,7 +34,7 @@ class MCTS():
         with open('demo_plan.json', 'r', encoding='utf8') as f:
             return f.read()
 
-    def travel_plan(self, start_date: datetime, end_date: datetime, tags: list, start_hour: int = 8, end_hour: int = 18, must_add: list = None, budget: int = None):
+    def travel_plan(self, start_date: datetime, end_date: datetime, tags: list, must_add: list = None, budget: int = None):
         delta = end_date - start_date
         date_list = [start_date + timedelta(days=i)
                      for i in range(delta.days + 1)]
@@ -56,5 +56,5 @@ class MCTS():
                     used_place += [int(feature['loc_id'])]
         return [d for d in places if d["loc_id"] not in used_place]
 
-    def _travel_day(self,filtered_POI, tags, start_hour, end_hour, budget):
+    def _travel_day(self,filtered_POI, tags, budget):
         return generatePlan(filtered_POI, self.allTags,self.driving_time_matrix, tags, budget)
