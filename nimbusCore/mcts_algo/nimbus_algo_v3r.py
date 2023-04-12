@@ -22,9 +22,9 @@ def generatePlan(places, tags, distanceMatrix, walkMatrix, userSelectedTags, bud
     walkMatrix = copy.deepcopy(walkMatrix)
     
     # Algo params
-    startHour = datetime.datetime(2023, 4, 9, 9, 0) # year month day hour min
+    startHour = datetime.datetime(2023, 4, 9, 10, 0) # year month day hour min
     endHour = datetime.datetime(2023, 4, 9, 16, 0)
-    searchCycle = 20_000
+    searchCycle = 20000
     tagWeight = 2
     C = 5 # C is bias to explore new route
     # TODO
@@ -243,7 +243,7 @@ def generatePlan(places, tags, distanceMatrix, walkMatrix, userSelectedTags, bud
                         # 'visitCount': pointer.visitCount,
                         })
 
-        printGraph(itArr[1:], placesDict)
+        # printGraph(itArr[1:], placesDict)
         return itArr[1:]
 
     # # Main function
@@ -419,6 +419,7 @@ if __name__ == '__main__':
     # # testing user params
     # generate random userSelectedTags params
     userSelectedTags = [tag for tag in tags if randInt(1)]
+    userSelectedTags = [tag for tag in userSelectedTags if randInt(1)]
     budget = 3
     travelMethod = [
                     'drive', 
