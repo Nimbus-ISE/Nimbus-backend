@@ -1,5 +1,6 @@
 # # user parameters
 
+from __future__ import annotations
 import random
 import time
 import math
@@ -16,7 +17,7 @@ sys.path.append(os.path.realpath(os.path.dirname(__file__)))
 from helper import timeStringToTime
 
 
-def generatePlan(places, tags, distanceMatrix, walkMatrix, userSelectedTags, budget, travelMethod, tripPace):
+def generatePlan(places, tags, distanceMatrix, walkMatrix, userSelectedTags, budget, travelMethod: list, tripPace: int, wantGraph: bool = True):
     # deep copy to avoid overwriting variables
     distanceMatrix = copy.deepcopy(distanceMatrix)
     walkMatrix = copy.deepcopy(walkMatrix)
@@ -39,6 +40,7 @@ def generatePlan(places, tags, distanceMatrix, walkMatrix, userSelectedTags, bud
     if tripPace == 2:
         startHour = datetime.datetime(2023, 4, 9, 8, 0) # year month day hour min
         endHour = datetime.datetime(2023, 4, 9, 20, 0)
+
 
 
     # TODO wrap in another function file
@@ -140,11 +142,14 @@ def generatePlan(places, tags, distanceMatrix, walkMatrix, userSelectedTags, bud
     def getTravelMethod(x, y):
         if x == y or 'wait' in [x, y] or 'start' in [x, y]:
             return 'none'
-
         return travelMethodMatrix[x][y]
     
     # # MCTS ALGORITHM
     class Node:
+        child:list[Node]
+        parent:list[Node]
+
+
         def __init__(self, place, child=[], parent=None):
             self.loc_id = place['loc_id']
             self.est_time_stay = place['est_time_stay']
@@ -251,7 +256,8 @@ def generatePlan(places, tags, distanceMatrix, walkMatrix, userSelectedTags, bud
                         # 'visitCount': pointer.visitCount,
                         })
 
-        printGraph(itArr[1:], placesDict)
+        if wantGraph:
+            printGraph(itArr[1:], placesDict)
         return itArr[1:]
 
     # # Main function
