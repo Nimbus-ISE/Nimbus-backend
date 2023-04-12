@@ -16,15 +16,15 @@ sys.path.append(os.path.realpath(os.path.dirname(__file__)))
 from helper import timeStringToTime
 
 
-def generatePlan(places, tags, distanceMatrix_from_above, walkMatrix, userSelectedTags, budget):
+def generatePlan(places, tags, distanceMatrix, walkMatrix, userSelectedTags, budget, travelMethod):
     # deep copy to avoid overwriting variables
-    distanceMatrix = copy.deepcopy(distanceMatrix_from_above)
+    distanceMatrix = copy.deepcopy(distanceMatrix)
     walkMatrix = copy.deepcopy(walkMatrix)
     
     # Algo params
-    startHour = datetime.datetime(2023, 4, 9, 9, 0) # year month day hour min
+    startHour = datetime.datetime(2023, 4, 9, 10, 0) # year month day hour min
     endHour = datetime.datetime(2023, 4, 9, 16, 0)
-    searchCycle = 20_000
+    searchCycle = 20000
     tagWeight = 2
     C = 5 # C is bias to explore new route
     # TODO
@@ -43,6 +43,10 @@ def generatePlan(places, tags, distanceMatrix_from_above, walkMatrix, userSelect
     for start in distanceMatrix.keys():
         for dest in distanceMatrix[start].keys():
             distanceMatrix[start][dest] = datetime.timedelta(minutes=distanceMatrix[start][dest])
+            if dest in walkMatrix[start].keys():
+                walkMatrix[start][dest] = datetime.timedelta(minutes=walkMatrix[start][dest])
+            else:
+                walkMatrix[start][dest] = datetime.timedelta(minutes=99)
     
     startNode = {
         'loc_id': 'start',
@@ -76,23 +80,60 @@ def generatePlan(places, tags, distanceMatrix_from_above, walkMatrix, userSelect
         placeScores[places[i]['loc_id']] = totalScores[i]
     placeScores['start'] = 0
     
-    # scoring criteria: tag + rating + distance
+    # SCORING FUNCTION: tagMatched + rating / distance
     placeScoresMatrix = {}
+    travelMethodMatrix = {}
     for x in places:
         placeScoresMatrix[x['loc_id']] = {}
+        travelMethodMatrix[x['loc_id']] = {}
 
         for y in places:
-            if 'wait' in x['tags'] or 'wait' in y['tags'] or x['loc_id'] == y['loc_id'] or 'start' in x['tags']:
+            if 'wait' in x['tags'] or 'wait' in y['tags'] or x['loc_id'] == y['loc_id']:
                 placeScoresMatrix[x['loc_id']][y['loc_id']] = 0
+                travelMethodMatrix[x['loc_id']][y['loc_id']] = 'none'
             else:
-                placeScoresMatrix[x['loc_id']][y['loc_id']] = placeScores[y['loc_id']] / (1 + (distanceMatrix[x['loc_id']][y['loc_id']]).total_seconds()) # TODO remove distance cal for now
-    placeScoresMatrix['start'] = {place['loc_id'] : 0 for place in places}
+                walkTime = walkMatrix[x['loc_id']][y['loc_id']].seconds
+                driveTime = walkMatrix[x['loc_id']][y['loc_id']].seconds
+                driveScore = placeScores[y['loc_id']] / ((1 + driveTime)) # v1.0
+                # driveScore = 0.99 * placeScores[y['loc_id']] / ((1 + driveTime) ** 0.5) # v1.1 :(
+                placeScoresMatrix[x['loc_id']][y['loc_id']] = driveScore
+                
+                # travel method
+                # 1) walk and drive 
+                if 'walk' in travelMethod and 'drive' in travelMethod:
+                    if walkTime <= 15 * 60 and 'walk': # walk if less than 15 mins
+                        travelMethodMatrix[x['loc_id']][y['loc_id']] = 'walk'
+                    else:
+                        travelMethodMatrix[x['loc_id']][y['loc_id']] = 'drive'
+                # 2) walk only
+                elif 'walk' in travelMethod:
+                    travelMethodMatrix[x['loc_id']][y['loc_id']] = 'walk'
+                # 3) drive only
+                elif 'drive' in travelMethod:
+                    if walkTime <= 5 * 60 and 'walk': # walk if less than 15 mins
+                        travelMethodMatrix[x['loc_id']][y['loc_id']] = 'walk'
+                    else:
+                        travelMethodMatrix[x['loc_id']][y['loc_id']] = 'drive'
 
-    def getTravelDuration(x, y):
+    placeScoresMatrix['start'] = {place['loc_id'] : 0 for place in places} # start score matrix = 0 to treat every node equally
+    travelMethodMatrix['start'] = {place['loc_id'] : 'none' for place in places}
+
+    # print(travelMethodMatrix)
+
+    def getTravelDuration(x, y, travelMethod):
         if x == y or 'wait' in [x, y] or 'start' in [x, y]:
             return datetime.timedelta() # 0
 
+        if travelMethod == 'walk':
+            return walkMatrix[x][y]
+        
         return distanceMatrix[x][y]
+
+    def getTravelMethod(x, y):
+        if x == y or 'wait' in [x, y] or 'start' in [x, y]:
+            return 'none'
+
+        return travelMethodMatrix[x][y]
     
     # # MCTS ALGORITHM
     class Node:
@@ -108,11 +149,14 @@ def generatePlan(places, tags, distanceMatrix_from_above, walkMatrix, userSelect
             # self.nodeReward = None # unused
 
             if parent is not None:
-                self.travelDuration = getTravelDuration(self.loc_id, parent.loc_id)  # time to get here
+                self.travelMethod = getTravelMethod(self.loc_id, parent.loc_id)  # method to get here
+                self.travelDuration = getTravelDuration(self.loc_id, parent.loc_id, self.travelMethod)  # time to get here
                 self.arrivalTime = parent.leaveTime + self.travelDuration
                 self.leaveTime = parent.leaveTime + self.travelDuration + self.est_time_stay
             else: # first place
+                self.travelMethod = 'none' # method to get here
                 self.travelDuration = 0
+                self.arrivalTime = startHour
                 self.leaveTime = startHour + self.est_time_stay
 
     def calcExploitScore(startNode, destNode):
@@ -186,7 +230,8 @@ def generatePlan(places, tags, distanceMatrix_from_above, walkMatrix, userSelect
             # append max child place to itinerary
             # append travel duration
             itArr.append({'type': 'travel_dur',
-                        'travel_dur': pointer.travelDuration.seconds
+                        'travel_dur': pointer.travelDuration.seconds,
+                        'travel_type': pointer.travelMethod,
                         })
             # append next location
             itArr.append({'type': 'locations',
@@ -198,7 +243,7 @@ def generatePlan(places, tags, distanceMatrix_from_above, walkMatrix, userSelect
                         # 'visitCount': pointer.visitCount,
                         })
 
-        printGraph(itArr[1:], placesDict)
+        # printGraph(itArr[1:], placesDict)
         return itArr[1:]
 
     # # Main function
@@ -230,11 +275,11 @@ def generatePlan(places, tags, distanceMatrix_from_above, walkMatrix, userSelect
                             # money budget
                             and isLowerThanBudget(place, selectedPlace, budget)
                             # time budget
-                            and pointer.leaveTime + getTravelDuration(pointer.loc_id, place['loc_id']) + place['est_time_stay'] < endHour
+                            and pointer.leaveTime + getTravelDuration(pointer.loc_id, place['loc_id'], pointer.travelMethod) + place['est_time_stay'] < endHour
                             # after open hour
-                            and (pointer.leaveTime + getTravelDuration(pointer.loc_id, place['loc_id'])).time() >= place['hours'][0]
+                            and (pointer.leaveTime + getTravelDuration(pointer.loc_id, place['loc_id'], pointer.travelMethod)).time() >= place['hours'][0]
                             # before close hour
-                            and (pointer.leaveTime + getTravelDuration(pointer.loc_id, place['loc_id']) + place['est_time_stay']).time() <= place['hours'][1]
+                            and (pointer.leaveTime + getTravelDuration(pointer.loc_id, place['loc_id'], pointer.travelMethod) + place['est_time_stay']).time() <= place['hours'][1]
                             # food or not
                             and takeFood(place, pointer, hadFood)
                             ]
@@ -291,7 +336,7 @@ def generatePlan(places, tags, distanceMatrix_from_above, walkMatrix, userSelect
         long = [placeDict[place['loc_id']]['coordinate'][1] for place in places]
         placeName = [placeDict[place['loc_id']]['loc_name'] for place in places]
         placeHour = [placeDict[place['loc_id']]['hours'] for place in places]
-
+    
         plt.figure(figsize=(8, 8))
         plt.plot(lat, long)
         # plt.scatter(x, y)
@@ -374,7 +419,12 @@ if __name__ == '__main__':
     # # testing user params
     # generate random userSelectedTags params
     userSelectedTags = [tag for tag in tags if randInt(1)]
+    userSelectedTags = [tag for tag in userSelectedTags if randInt(1)]
     budget = 3
+    travelMethod = [
+                    'drive', 
+                    'walk'
+                    ]
     
     # TODO change parameters to dict object
     # TEST RUN
@@ -383,10 +433,11 @@ if __name__ == '__main__':
 
     plan, treeRoot = generatePlan(places=places, 
                        tags=tags, 
-                       distanceMatrix_from_above=distanceMatrix,  
+                       distanceMatrix=distanceMatrix,  
                        walkMatrix=walkMatrix,
                        userSelectedTags=userSelectedTags, 
-                       budget=budget)
+                       budget=budget,
+                       travelMethod=travelMethod)
     
     print(plan)
     print(userSelectedTags)
