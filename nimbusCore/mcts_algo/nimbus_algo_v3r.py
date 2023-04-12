@@ -10,6 +10,7 @@ import os
 import sys
 import datetime
 import copy
+from typing import Union,TypeVar
 
 # have this before importing helper so no import error
 sys.path.append(os.path.realpath(os.path.dirname(__file__)))
@@ -146,11 +147,19 @@ def generatePlan(places, tags, distanceMatrix, walkMatrix, userSelectedTags, bud
     
     # # MCTS ALGORITHM
     class Node:
+        loc_id:Union[int,str]
+        est_time_stay:datetime.timedelta
         child:list[Node]
         parent:list[Node]
+        totalReward:int
+        visitCount:int
+        travelMethod:str
+        travelDuration:datetime.timedelta
+        arrivalTime:datetime.datetime
+        leaveTime:datetime.datetime
 
 
-        def __init__(self, place, child=[], parent=None):
+        def __init__(self, place, child=[], parent:Node=None):
             self.loc_id = place['loc_id']
             self.est_time_stay = place['est_time_stay']
 
