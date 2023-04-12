@@ -22,7 +22,7 @@ def generatePlan(places, tags, distanceMatrix, walkMatrix, userSelectedTags, bud
     walkMatrix = copy.deepcopy(walkMatrix)
     
     # ALGO params
-    searchCycle = 20000
+    searchCycle = 10000
     tagWeight = 2
     C = 5 # C is bias to explore new route
     # TODO
@@ -450,6 +450,7 @@ if __name__ == '__main__':
                             tripPace=tripPace,
                             )
     
+    print('------------------------------------------------------')
     for place in plan:
         print(place)
     print('------------------------------------------------------')
