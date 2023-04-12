@@ -16,14 +16,12 @@ sys.path.append(os.path.realpath(os.path.dirname(__file__)))
 from helper import timeStringToTime
 
 
-def generatePlan(places, tags, distanceMatrix, walkMatrix, userSelectedTags, budget, travelMethod):
+def generatePlan(places, tags, distanceMatrix, walkMatrix, userSelectedTags, budget, travelMethod, tripPace):
     # deep copy to avoid overwriting variables
     distanceMatrix = copy.deepcopy(distanceMatrix)
     walkMatrix = copy.deepcopy(walkMatrix)
     
-    # Algo params
-    startHour = datetime.datetime(2023, 4, 9, 10, 0) # year month day hour min
-    endHour = datetime.datetime(2023, 4, 9, 16, 0)
+    # ALGO params
     searchCycle = 20000
     tagWeight = 2
     C = 5 # C is bias to explore new route
@@ -32,6 +30,16 @@ def generatePlan(places, tags, distanceMatrix, walkMatrix, userSelectedTags, bud
     # time spend ** modifier
     # higher = prefer longer distance but better place score
     # lower = prefer shorter distance but less place score
+    if tripPace == 0:
+        startHour = datetime.datetime(2023, 4, 9, 10, 0) # year month day hour min
+        endHour = datetime.datetime(2023, 4, 9, 16, 0)
+    if tripPace == 1:
+        startHour = datetime.datetime(2023, 4, 9, 9, 0) # year month day hour min
+        endHour = datetime.datetime(2023, 4, 9, 18, 0)
+    if tripPace == 2:
+        startHour = datetime.datetime(2023, 4, 9, 8, 0) # year month day hour min
+        endHour = datetime.datetime(2023, 4, 9, 20, 0)
+
 
     # TODO wrap in another function file
     # convert openHours, est_time_stay into datetime format
@@ -243,11 +251,11 @@ def generatePlan(places, tags, distanceMatrix, walkMatrix, userSelectedTags, bud
                         # 'visitCount': pointer.visitCount,
                         })
 
-        # printGraph(itArr[1:], placesDict)
+        printGraph(itArr[1:], placesDict)
         return itArr[1:]
 
     # # Main function
-    def mcts(cycle, budget=4, tripPace=2):
+    def mcts(cycle):
         def childrenNodeExpansion(placeNode, availablePlace):
             if len(placeNode.child) == 0 and len(availablePlace) != 0:
                 placeNode.child = [Node(p, [], placeNode) for p in availablePlace]
@@ -346,7 +354,7 @@ def generatePlan(places, tags, distanceMatrix, walkMatrix, userSelectedTags, bud
 
         plt.show()
 
-    return mcts(searchCycle, budget=budget)
+    return mcts(searchCycle)
 
 
 if __name__ == '__main__':
@@ -416,30 +424,39 @@ if __name__ == '__main__':
         data = file.read()
         walkMatrix = eval(data)
         
+    travelMethods = [['drive'], ['drive', 'walk'], ['walk']]
+
     # # testing user params
     # generate random userSelectedTags params
     userSelectedTags = [tag for tag in tags if randInt(1)]
     userSelectedTags = [tag for tag in userSelectedTags if randInt(1)]
     budget = 3
-    travelMethod = [
-                    'drive', 
-                    'walk'
-                    ]
+    travelMethod = travelMethods[randInt(2)]
+    tripPace = randInt(2)
     
     # TODO change parameters to dict object
     # TEST RUN
     startTimer = time.time()
     print('Generating plan...')
 
-    plan, treeRoot = generatePlan(places=places, 
-                       tags=tags, 
-                       distanceMatrix=distanceMatrix,  
-                       walkMatrix=walkMatrix,
-                       userSelectedTags=userSelectedTags, 
-                       budget=budget,
-                       travelMethod=travelMethod)
+    plan, treeRoot = generatePlan(
+                            places=places, 
+                            tags=tags, 
+                            distanceMatrix=distanceMatrix,  
+                            walkMatrix=walkMatrix,
+                            userSelectedTags=userSelectedTags, 
+                            budget=budget,
+                            travelMethod=travelMethod,
+                            tripPace=tripPace,
+                            )
     
-    print(plan)
-    print(userSelectedTags)
+    for place in plan:
+        print(place)
+    print('------------------------------------------------------')
+    print('tags :', userSelectedTags)
+    print('budget :', budget)
+    print('travelMethod :', travelMethod)
+    print('tripPace :', tripPace)
+    print('------------------------------------------------------')
     print(f'Runtime : {time.time() - startTimer} sec')
 
