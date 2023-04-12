@@ -47,6 +47,7 @@ def index():
 def getSampleTrip():
     return json.dumps(TripBuilder.demo_trip())
 
+
 # date in string iso format
 # tags as comma separated string or json
 # budget as int/string 0 - 3
@@ -56,27 +57,57 @@ def getTripMCTS():
     content_type = request.headers.get('Content-Type')
     api_key = request.headers.get('Api-Key')
 
-    # do new class to get save and check api key
     if api_key is None or api_key not in secret['valid_api_keys']:
         return 'Invalid Api Key'
 
     if content_type != 'application/json':
-        return 'Content-Type not supported!'
+        return 'Content-Type not supported'
     
     try:
         data = json.loads(request.data)
     except Exception as e:
         logging.exception('An error occurred: %s', str(e))
         return 'Error parsing body'
-    if not {'start_date', 'end_date', 'tags', 'budget'}.issubset(set(data.keys())):
-        return 'Missing data field/s in body'
+    missing_fields = [field for field in ['start_date', 'end_date', 'tags', 'budget', 'travel_method', 'trip_pace'] if field not in data]
+    if missing_fields:
+        return f"Missing fields: {', '.join(missing_fields)}"
+    
+    if not set(data['travel_method'].split(',')).issubset({'walk','drive'}):
+        return 'Invalid travel method'
     
     try:
-        return json.dumps(TripBuilder.generate_trip_mcts(start_date=datetime.fromisoformat(data['start_date']), end_date=datetime.fromisoformat(data['end_date']), tags=data['tags'].split(','), must_add=None, budget=int(data['budget'])))
+        return json.dumps(TripBuilder.generate_trip_mcts(start_date=datetime.fromisoformat(data['start_date']), end_date=datetime.fromisoformat(data['end_date']), tags=data['tags'].split(','), must_add=None, budget=int(data['budget']), travel_method=data['travel_method'].split(','), trip_pace=int(data['trip_pace'])))
     except Exception as e:
         logging.exception('An error occurred: %s', str(e))
         return 'error generating plan'
- 
+    
+@app.route('/alternative_route', methods=['POST'])
+def alternative_route():
+    content_type = request.headers.get('Content-Type')
+    api_key = request.headers.get('Api-Key')
+
+    if api_key is None or api_key not in secret['valid_api_keys']:
+        return 'Invalid Api Key'
+
+    if content_type != 'application/json':
+        return 'Content-Type not supported'
+    
+    try:
+        data = json.loads(request.data)
+    except Exception as e:
+        logging.exception('An error occurred: %s', str(e))
+        return 'Error parsing body'
+    if not {'trip_id', 'loc_id'}.issubset(set(data.keys())):
+        return 'Missing data field/s in body'
+    
+    return 'alternative place not implemented'
+
+    try:
+        return json.dumps(TripBuilder.get_alternative_place(str(data['trip_id']), str(data['loc_id'])))
+    except Exception as e:
+        logging.exception('An error occurred: %s', str(e))
+        return 'error getting alternative place'
+
 if __name__ == "__main__":
     app.run(host=secret["host"], port=secret["port"],
             debug=(secret['debug'].lower() == "true"))
