@@ -1,5 +1,6 @@
 # # user parameters
 
+from __future__ import annotations
 import random
 import time
 import math
@@ -9,6 +10,7 @@ import os
 import sys
 import datetime
 import copy
+from typing import Union,TypeVar
 
 # have this before importing helper so no import error
 sys.path.append(os.path.realpath(os.path.dirname(__file__)))
@@ -16,7 +18,7 @@ sys.path.append(os.path.realpath(os.path.dirname(__file__)))
 from helper import timeStringToTime
 
 
-def generatePlan(places, tags, distanceMatrix, walkMatrix, userSelectedTags, budget, travelMethod, tripPace):
+def generatePlan(places, tags, distanceMatrix, walkMatrix, userSelectedTags, budget, travelMethod: list, tripPace: int, wantGraph: bool = True):
     # deep copy to avoid overwriting variables
     distanceMatrix = copy.deepcopy(distanceMatrix)
     walkMatrix = copy.deepcopy(walkMatrix)
@@ -39,6 +41,7 @@ def generatePlan(places, tags, distanceMatrix, walkMatrix, userSelectedTags, bud
     if tripPace == 2:
         startHour = datetime.datetime(2023, 4, 9, 8, 0) # year month day hour min
         endHour = datetime.datetime(2023, 4, 9, 20, 0)
+
 
 
     # TODO wrap in another function file
@@ -140,12 +143,23 @@ def generatePlan(places, tags, distanceMatrix, walkMatrix, userSelectedTags, bud
     def getTravelMethod(x, y):
         if x == y or 'wait' in [x, y] or 'start' in [x, y]:
             return 'none'
-
         return travelMethodMatrix[x][y]
     
     # # MCTS ALGORITHM
     class Node:
-        def __init__(self, place, child=[], parent=None):
+        loc_id:Union[int,str]
+        est_time_stay:datetime.timedelta
+        child:list[Node]
+        parent:list[Node]
+        totalReward:int
+        visitCount:int
+        travelMethod:str
+        travelDuration:datetime.timedelta
+        arrivalTime:datetime.datetime
+        leaveTime:datetime.datetime
+
+
+        def __init__(self, place, child=[], parent:Node=None):
             self.loc_id = place['loc_id']
             self.est_time_stay = place['est_time_stay']
 
@@ -251,7 +265,8 @@ def generatePlan(places, tags, distanceMatrix, walkMatrix, userSelectedTags, bud
                         # 'visitCount': pointer.visitCount,
                         })
 
-        printGraph(itArr[1:], placesDict)
+        if wantGraph:
+            printGraph(itArr[1:], placesDict)
         return itArr[1:]
 
     # # Main function
