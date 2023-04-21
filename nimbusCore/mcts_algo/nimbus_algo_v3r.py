@@ -16,7 +16,7 @@ from typing import Union,TypeVar
 sys.path.append(os.path.realpath(os.path.dirname(__file__)))
 
 from helper import timeStringToTime
-startHour
+
 
 def generatePlan(places, tags, distanceMatrix, walkMatrix, 
                  userSelectedTags: list, 
@@ -130,7 +130,7 @@ def generatePlan(places, tags, distanceMatrix, walkMatrix,
                     travelMethodMatrix[x['loc_id']][y['loc_id']] = 'walk'
                 # 3) drive only
                 elif 'drive' in travelMethod:
-                    if walkTime <= 5 * 60 and 'walk': # walk if less than 15 mins
+                    if walkTime <= 5 * 60 and 'walk': # walk if less than 5 mins
                         travelMethodMatrix[x['loc_id']][y['loc_id']] = 'walk'
                     else:
                         travelMethodMatrix[x['loc_id']][y['loc_id']] = 'drive'
@@ -152,20 +152,21 @@ def generatePlan(places, tags, distanceMatrix, walkMatrix,
     def getTravelMethod(x, y):
         if x == y or 'wait' in [x, y] or 'start' in [x, y]:
             return 'none'
+
         return travelMethodMatrix[x][y]
     
     # # MCTS ALGORITHM
     class Node:
-        loc_id:Union[int,str]
-        est_time_stay:datetime.timedelta
-        child:list[Node]
-        parent:list[Node]
-        totalReward:int
-        visitCount:int
-        travelMethod:str
-        travelDuration:datetime.timedelta
-        arrivalTime:datetime.datetime
-        leaveTime:datetime.datetime
+        loc_id: Union[int,str]
+        est_time_stay: datetime.timedelta
+        child: list[Node]
+        parent: list[Node]
+        totalReward: int
+        visitCount: int
+        travelMethod: str
+        travelDuration: datetime.timedelta
+        arrivalTime: datetime.datetime
+        leaveTime: datetime.datetime
 
 
         def __init__(self, place, child=[], parent:Node=None):
@@ -308,7 +309,7 @@ def generatePlan(places, tags, distanceMatrix, walkMatrix,
                             # money budget
                             and isLowerThanBudget(place, selectedPlace, budget)
                             # time budget
-                            and pointer.leaveTime + getTravelDuration(pointer.loc_id, place['loc_id'], pointer.travelMethod) + place['est_time_stay'] < endHour
+                            and (pointer.leaveTime + getTravelDuration(pointer.loc_id, place['loc_id'], pointer.travelMethod) + place['est_time_stay']).time() < endHour.time()
                             # after open hour
                             and (pointer.leaveTime + getTravelDuration(pointer.loc_id, place['loc_id'], pointer.travelMethod)).time() >= place['hours'][0]
                             # before close hour
@@ -458,7 +459,7 @@ if __name__ == '__main__':
     budget = 3
     travelMethod = travelMethods[randInt(2)]
     tripPace = randInt(2)
-    mustInclude = 72
+    mustInclude = 76
     
     # TODO change parameters to dict object
     # TEST RUN
