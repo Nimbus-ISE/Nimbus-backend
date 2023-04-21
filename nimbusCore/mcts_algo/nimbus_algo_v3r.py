@@ -16,9 +16,16 @@ from typing import Union,TypeVar
 sys.path.append(os.path.realpath(os.path.dirname(__file__)))
 
 from helper import timeStringToTime
+startHour
 
-
-def generatePlan(places, tags, distanceMatrix, walkMatrix, userSelectedTags, budget, travelMethod: list, tripPace: int, wantGraph: bool = True):
+def generatePlan(places, tags, distanceMatrix, walkMatrix, 
+                 userSelectedTags: list, 
+                 budget: int, 
+                 travelMethod: list, 
+                 tripPace: int, 
+                 mustInclude: str, 
+                 wantGraph: bool = True):
+    
     # deep copy to avoid overwriting variables
     distanceMatrix = copy.deepcopy(distanceMatrix)
     walkMatrix = copy.deepcopy(walkMatrix)
@@ -39,9 +46,8 @@ def generatePlan(places, tags, distanceMatrix, walkMatrix, userSelectedTags, bud
         startHour = datetime.datetime(2023, 4, 9, 9, 0) # year month day hour min
         endHour = datetime.datetime(2023, 4, 9, 18, 0)
     if tripPace == 2:
-        startHour = datetime.datetime(2023, 4, 9, 8, 0) # year month day hour min
+        startHour = datetime.datetime(2023, 4, 9, 9, 0) # year month day hour min
         endHour = datetime.datetime(2023, 4, 9, 20, 0)
-
 
 
     # TODO wrap in another function file
@@ -71,6 +77,7 @@ def generatePlan(places, tags, distanceMatrix, walkMatrix, userSelectedTags, bud
     }
     startNode['hours'] = (timeStringToTime(startNode['hours'][0]), timeStringToTime(startNode['hours'][1]))
         
+    # TODO hidden gem weight increase
     # generate place dict
     placesDict = {place['loc_id']: place for place in places}
     placesDict['start'] = startNode
@@ -90,7 +97,9 @@ def generatePlan(places, tags, distanceMatrix, walkMatrix, userSelectedTags, bud
     for i in range(len(totalScores)):
         placeScores[places[i]['loc_id']] = totalScores[i]
     placeScores['start'] = 0
-    
+    if mustInclude != None:
+        placeScores[mustInclude] = 99999 # increase the mustInclude placeScores 
+
     # SCORING FUNCTION: tagMatched + rating / distance
     placeScoresMatrix = {}
     travelMethodMatrix = {}
@@ -267,6 +276,7 @@ def generatePlan(places, tags, distanceMatrix, walkMatrix, userSelectedTags, bud
 
         if wantGraph:
             printGraph(itArr[1:], placesDict)
+
         return itArr[1:]
 
     # # Main function
@@ -448,6 +458,7 @@ if __name__ == '__main__':
     budget = 3
     travelMethod = travelMethods[randInt(2)]
     tripPace = randInt(2)
+    mustInclude = 72
     
     # TODO change parameters to dict object
     # TEST RUN
@@ -463,6 +474,7 @@ if __name__ == '__main__':
                             budget=budget,
                             travelMethod=travelMethod,
                             tripPace=tripPace,
+                            mustInclude=mustInclude,
                             )
     
     print('------------------------------------------------------')
@@ -473,6 +485,7 @@ if __name__ == '__main__':
     print('budget :', budget)
     print('travelMethod :', travelMethod)
     print('tripPace :', tripPace)
+    print('mustInclude :', mustInclude)
     print('------------------------------------------------------')
     print(f'Runtime : {time.time() - startTimer} sec')
 
