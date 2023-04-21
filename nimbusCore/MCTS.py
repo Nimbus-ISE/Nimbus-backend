@@ -38,7 +38,7 @@ class MCTS():
         with open('demo_plan.json', 'r', encoding='utf8') as f:
             return f.read()
 
-    def travel_plan(self, start_date: datetime, end_date: datetime, tags: list,  budget: int, travel_method: list, trip_pace: int, must_add: list = []):
+    def travel_plan(self, start_date: datetime, end_date: datetime, tags: list,  budget: int, travel_method: list, trip_pace: int, must_include: int):
         delta = end_date - start_date
         date_list = [start_date + timedelta(days=i)
                      for i in range(delta.days + 1)]
@@ -47,7 +47,7 @@ class MCTS():
         travel_plan = []
         for day in dayRange:
             POI_dict_day_of_week[day] = self._remove_duplicate(POI_dict_day_of_week[day], travel_plan)
-            travel_day, tree_root = self._travel_day(POI_dict_day_of_week[day],tags,budget, travel_method, trip_pace)
+            travel_day, tree_root = self._travel_day(POI_dict_day_of_week[day],tags,budget, travel_method, must_include, trip_pace)
             travel_plan.append(travel_day)
             # travel_trees.append(tree_root)
             del tree_root
@@ -102,5 +102,5 @@ class MCTS():
                     used_place += [int(feature['loc_id'])]
         return [d for d in places if d["loc_id"] not in used_place]
 
-    def _travel_day(self,filtered_POI, tags, budget, travel_method: list, trip_pace: int):
-        return generatePlan(filtered_POI, self.allTags,self.driving_time_matrix,self.walking_time_matrix, tags, budget, travel_method, trip_pace, False)
+    def _travel_day(self,filtered_POI, tags, budget, travel_method: list, trip_pace: int, must_include: str):
+        return generatePlan(filtered_POI, self.allTags,self.driving_time_matrix,self.walking_time_matrix, tags, budget, travel_method, must_include, trip_pace, False)

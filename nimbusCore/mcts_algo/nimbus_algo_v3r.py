@@ -25,7 +25,7 @@ def generatePlan(places, tags, distanceMatrix, walkMatrix,
                  tripPace: int, 
                  mustInclude: str, 
                  wantGraph: bool = True):
-    
+
     # deep copy to avoid overwriting variables
     distanceMatrix = copy.deepcopy(distanceMatrix)
     walkMatrix = copy.deepcopy(walkMatrix)
