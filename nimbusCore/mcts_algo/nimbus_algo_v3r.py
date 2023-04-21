@@ -135,10 +135,8 @@ def generatePlan(places, tags, distanceMatrix, walkMatrix,
                     else:
                         travelMethodMatrix[x['loc_id']][y['loc_id']] = 'drive'
 
-    placeScoresMatrix['start'] = {place['loc_id'] : 0 for place in places} # start score matrix = 0 to treat every node equally
+    placeScoresMatrix['start'] = {place['loc_id'] : placeScores[place['loc_id']] for place in places} # start score matrix = 0 to treat every node equally
     travelMethodMatrix['start'] = {place['loc_id'] : 'none' for place in places}
-
-    # print(travelMethodMatrix)
 
     def getTravelDuration(x, y, travelMethod):
         if x == y or 'wait' in [x, y] or 'start' in [x, y]:
@@ -319,10 +317,6 @@ def generatePlan(places, tags, distanceMatrix, walkMatrix,
                             ]
 
                 return availPlace
-
-        # TODO : rn best score -> first place hehe
-        # loc_id = max(placeScores, key=placeScores.get)
-        # firstPlace = placesDict[loc_id]
 
         treeRoot = Node(placesDict['start'])
         selectedPlace = []
