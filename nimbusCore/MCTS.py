@@ -62,6 +62,9 @@ class MCTS():
         the_rest = []
         for travel_day in trip:
             for i, feature in enumerate(travel_day):
+                if found and feature['type'] == 'locations':
+                    the_rest.append(feature['loc_id'])
+            
                 if feature['type'] == 'locations' and str(feature['loc_id']) == place:
                     if i == 0:
                         start = 'start'
@@ -70,14 +73,12 @@ class MCTS():
                         start = travel_day[i-2]['loc_id']
                         start_time = travel_day[i-2]['arrival_time']
                     middle = travel_day[i]['loc_id']
-                    if i < len(travel_day):
+                    if i + 2 < len(travel_day):
                         end = travel_day[i+2]['loc_id']
                     else:
                         end = 'end'
                     found = True
                 
-                if found and feature['type'] == 'locations':
-                    the_rest.append(feature['loc_id'])
                     
             if found:
                 break
@@ -86,7 +87,11 @@ class MCTS():
         day = datetime.fromisoformat(day).strftime('%a').lower()
                         
         POI_dict_day_of_week = deepcopy(self.POI_dict_day_of_week)
-        return alternative_place(start, middle, end, self.walking_time_matrix, the_rest, self._remove_duplicate(POI_dict_day_of_week[day],trip), start_time)
+        filtered_place = self._remove_duplicate(POI_dict_day_of_week[day],trip)
+        filtered_place_id = [place['loc_id'] for place in filtered_place]
+        est_time_stay_dict = {place['loc_id'] : place['est_time_stay'] for place in POI_dict_day_of_week[day]}
+
+        return alternative_place(start, middle, end, self.walking_time_matrix, the_rest, est_time_stay_dict, datetime.strptime(start_time, "%H:%M:%S"),filtered_place_id)
     
     @staticmethod
     def _remove_duplicate(places: list, travel_plan: list):

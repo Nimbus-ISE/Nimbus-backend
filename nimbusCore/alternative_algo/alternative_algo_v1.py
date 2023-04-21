@@ -1,43 +1,39 @@
-def alternative_place(start, middle, end, tt_mat, the_rest, place_dict, start_time):
+from datetime import timedelta
+
+def alternative_place(start, middle, end, tt_mat, the_rest, est_time_stay_dict, start_time, filtered_loc_id):
     plan_segment = []
-    
-    new_middle = sorted(tt_mat[middle], key=lambda k: tt_mat[middle][k])[:3]
-    
+    new_middle = sorted({key:value for key, value in tt_mat[middle].items() if key in filtered_loc_id}, key=lambda k: tt_mat[middle][k])[:3]
     for poi in new_middle:
         tmp = []
-        time_now = start
+        time_now = start_time
         if not start == 'start':
             tmp.append([{
                 "type": "travel_dur",
-                "travel_time": tt_mat[start][poi]
+                "travel_time": tt_mat[int(start)][int(poi)]
             }])
-            time_now += tt_mat[start][poi]
+            time_now += timedelta(seconds=tt_mat[int(start)][int(poi)])
         tmp.append([{
                 "type": "locations",
                 "loc_id": str(poi),
-                "arrival_time": time_now,
-                "leave_time": time_now + place_dict[poi]['est_time_stay']
+                "arrival_time": time_now.strftime("%H:%M:%S"),
+                "leave_time": (time_now + timedelta(minutes=est_time_stay_dict[poi])).strftime("%H:%M:%S")
             }])
-        time_now += place_dict[poi]['est_time_stay']
+        time_now += timedelta(seconds=est_time_stay_dict[poi])
+
         
-        if not start == 'end':
-            tmp.append([{
-                "type": "travel_dur",
-                "travel_time": tt_mat[poi][end]
-            }])
-            time_now += tt_mat[poi][end]
         place_b4 = end
         for place in the_rest:
             tmp.append({
                 "type": "travel_dur",
-                "travel_time": tt_mat[place_b4][place]
+                "travel_time": tt_mat[int(place_b4)][int(place)]
             })
             tmp.append({
                 "type": "locations",
                 "loc_id": place,
-                "arrival_time": time_now + tt_mat[place_b4][place],
-                "leave_time": time_now + tt_mat[place_b4][place] + place_dict[place]['est_time_stay']
+                "arrival_time": (time_now + timedelta(seconds=tt_mat[int(place_b4)][int(place)])).strftime("%H:%M:%S"),
+                "leave_time": (time_now + timedelta(seconds=tt_mat[int(place_b4)][int(place)])) + timedelta(minutes=est_time_stay_dict[place]).strftime("%H:%M:%S")
             })
+            time_now += timedelta(seconds=tt_mat[int(place_b4)][int(place)] + est_time_stay_dict[place])
             place_b4 = place
         if len(the_rest) > 0:
             tmp.pop(-1)

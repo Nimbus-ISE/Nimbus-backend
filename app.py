@@ -81,7 +81,7 @@ def getTripMCTS():
         logging.exception('An error occurred: %s', str(e))
         return 'error generating plan', 400
     
-@app.route('/alternative_route', methods=['POST'])
+@app.route('/get_alternative_place', methods=['POST'])
 def alternative_route():
     content_type = request.headers.get('Content-Type')
     api_key = request.headers.get('Api-Key')
