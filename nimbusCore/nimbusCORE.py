@@ -11,6 +11,9 @@ class TripBuilder():
 
     def demo_trip(self):
         return self.mcts.demo_travel_plan()
+    
+    def get_alternative_place(self, trip,  place, day):
+        return self.mcts.alternative_place(trip, place, day)
 
     def refetch_data(self):
         try:

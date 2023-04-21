@@ -97,13 +97,11 @@ def alternative_route():
     except Exception as e:
         logging.exception('An error occurred: %s', str(e))
         return 'Error parsing body'
-    if not {'trip_id', 'loc_id'}.issubset(set(data.keys())):
+    if not {'trip', 'loc_id', 'day'}.issubset(set(data.keys())):
         return 'Missing data field/s in body'
     
-    return 'alternative place not implemented'
-
     try:
-        return json.dumps(TripBuilder.get_alternative_place(str(data['trip_id']), str(data['loc_id'])))
+        return json.dumps(TripBuilder.get_alternative_place(data['trip'], str(data['loc_id']), data['day']))
     except Exception as e:
         logging.exception('An error occurred: %s', str(e))
         return 'error getting alternative place'

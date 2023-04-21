@@ -16,8 +16,7 @@ class MCTS():
     def __init__(self):
         self.dataProcessor = dataProcesser()
         self.POI_dict_day_of_week, self.driving_time_matrix, self.walking_time_matrix = self.dataProcessor.get_MCTS_data()
-        self.allTags = self.dataProcessor.db.get_all_tags()
-        self.travel_plan_dict = {}
+        self.allTags = [tag[0] for tag in self.dataProcessor.db.get_all_tags()]
 
     def update_data(self):
         #TODO trigger update for ttapi if tt not include all place
@@ -46,50 +45,48 @@ class MCTS():
         dayRange = [date.strftime('%a').lower() for date in date_list]
         POI_dict_day_of_week = deepcopy(self.POI_dict_day_of_week)
         travel_plan = []
-        # travel_trees = []
         for day in dayRange:
             POI_dict_day_of_week[day] = self._remove_duplicate(POI_dict_day_of_week[day], travel_plan)
             travel_day, tree_root = self._travel_day(POI_dict_day_of_week[day],tags,budget, travel_method, trip_pace)
             travel_plan.append(travel_day)
             # travel_trees.append(tree_root)
+            del tree_root
         
         trip_id = uuid.uuid4().hex
-        def del_this():
-            del self.travel_plan_dict[trip_id]
-        self.travel_plan_dict[trip_id] = {
-        #     'root': tree_root,
-            'travel_plan': travel_plan,
-            'threading' : threading.Timer(1800, del_this),
-            'del_method' : del_this(),
-        }
 
         return travel_plan, trip_id
     
-    def alternative_place(self, uuid , place, date : datetime):
-        
-        if uuid not in self.travel_plan_dict:
-            return 'plan deleted',400
-        
-        self.travel_plan_dict[uuid]['threading'].cancel()
-        self.travel_plan_dict[uuid]['threading'] = threading.Timer(1800, self.travel_plan_dict[uuid]['del_method'])
+    def alternative_place(self, trip , place, day):
 
-        for travel_day in self.travel_plan_dict[uuid]['travel_plan']:
+        found = False
+        the_rest = []
+        for travel_day in trip:
             for i, feature in enumerate(travel_day):
-                if feature['type'] == 'locations' and feature['loc_id'] == place:
+                if feature['type'] == 'locations' and str(feature['loc_id']) == place:
                     if i == 0:
                         start = 'start'
+                        start_time = feature['arrival_time']
                     else:
                         start = travel_day[i-2]['loc_id']
+                        start_time = travel_day[i-2]['arrival_time']
                     middle = travel_day[i]['loc_id']
                     if i < len(travel_day):
                         end = travel_day[i+2]['loc_id']
                     else:
                         end = 'end'
-                        
-        day = date.day
+                    found = True
+                
+                if found and feature['type'] == 'locations':
+                    the_rest.append(feature['loc_id'])
+                    
+            if found:
+                break
+        if not found:
+            return trip, 400
+        day = datetime.fromisoformat(day).strftime('%a').lower()
                         
         POI_dict_day_of_week = deepcopy(self.POI_dict_day_of_week)
-        return alternative_place(start, middle, end, self.walking_time_matrix, self._remove_duplicate(POI_dict_day_of_week[day], self.travel_plan_dict[uuid]['travel_plan']))
+        return alternative_place(start, middle, end, self.walking_time_matrix, the_rest, self._remove_duplicate(POI_dict_day_of_week[day],trip), start_time)
     
     @staticmethod
     def _remove_duplicate(places: list, travel_plan: list):
