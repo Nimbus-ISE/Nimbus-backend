@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, Response
 from nimbusCore import *
 import json
 import os
@@ -58,28 +58,28 @@ def getTripMCTS():
     api_key = request.headers.get('Api-Key')
 
     if api_key is None or api_key not in secret['valid_api_keys']:
-        return 'Invalid Api Key'
+        return 'Invalid Api Key', 400
 
     if content_type != 'application/json':
-        return 'Content-Type not supported'
+        return 'Content-Type not supported', 400
     
     try:
         data = json.loads(request.data)
     except Exception as e:
         logging.exception('An error occurred: %s', str(e))
-        return 'Error parsing body'
+        return 'Error parsing body', 400
     missing_fields = [field for field in ['start_date', 'end_date', 'tags', 'budget', 'travel_method', 'trip_pace'] if field not in data]
     if missing_fields:
-        return f"Missing fields: {', '.join(missing_fields)}"
+        return f"Missing fields: {', '.join(missing_fields)}", 400
     
     if not set(data['travel_method'].split(',')).issubset({'walk','drive'}):
-        return 'Invalid travel method'
+        return 'Invalid travel method', 400
     
     try:
-        return json.dumps(TripBuilder.generate_trip_mcts(start_date=datetime.fromisoformat(data['start_date']), end_date=datetime.fromisoformat(data['end_date']), tags=data['tags'].split(','), must_add=None, budget=int(data['budget']), travel_method=data['travel_method'].split(','), trip_pace=int(data['trip_pace'])))
+        return json.dumps(TripBuilder.generate_trip_mcts(start_date=datetime.fromisoformat(data['start_date']), end_date=datetime.fromisoformat(data['end_date']), tags=data['tags'].split(','), must_add=None, budget=int(data['budget']), travel_method=data['travel_method'].split(','), trip_pace=int(data['trip_pace']))), 200
     except Exception as e:
         logging.exception('An error occurred: %s', str(e))
-        return 'error generating plan'
+        return 'error generating plan', 400
     
 @app.route('/alternative_route', methods=['POST'])
 def alternative_route():
