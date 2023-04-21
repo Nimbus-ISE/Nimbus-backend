@@ -54,7 +54,7 @@ class MCTS():
         
         trip_id = uuid.uuid4().hex
 
-        return travel_plan, trip_id
+        return {'travel_plan' : travel_plan,'trip_id' : trip_id}
     
     def alternative_place(self, trip , place, day):
 
