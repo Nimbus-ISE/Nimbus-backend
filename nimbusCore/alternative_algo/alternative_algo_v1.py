@@ -21,8 +21,9 @@ def alternative_place(start, middle, end, tt_mat, the_rest, est_time_stay_dict, 
         time_now += timedelta(seconds=est_time_stay_dict[poi])
 
         
-        place_b4 = end
+        place_b4 = poi
         for place in the_rest:
+            print(f'{place_b4} {place}')
             tmp.append({
                 "type": "travel_dur",
                 "travel_time": tt_mat[int(place_b4)][int(place)]
@@ -31,7 +32,7 @@ def alternative_place(start, middle, end, tt_mat, the_rest, est_time_stay_dict, 
                 "type": "locations",
                 "loc_id": place,
                 "arrival_time": (time_now + timedelta(seconds=tt_mat[int(place_b4)][int(place)])).strftime("%H:%M:%S"),
-                "leave_time": (time_now + timedelta(seconds=tt_mat[int(place_b4)][int(place)])) + timedelta(minutes=est_time_stay_dict[place]).strftime("%H:%M:%S")
+                "leave_time": (time_now + (timedelta(seconds=tt_mat[int(place_b4)][int(place)])) + timedelta(minutes=est_time_stay_dict[place])).strftime("%H:%M:%S")
             })
             time_now += timedelta(seconds=tt_mat[int(place_b4)][int(place)] + est_time_stay_dict[place])
             place_b4 = place

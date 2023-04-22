@@ -65,7 +65,7 @@ class MCTS():
                 if found and feature['type'] == 'locations':
                     the_rest.append(feature['loc_id'])
             
-                if feature['type'] == 'locations' and str(feature['loc_id']) == place:
+                if feature['type'] == 'locations' and str(feature['loc_id']) == str(place):
                     if i == 0:
                         start = 'start'
                         start_time = feature['arrival_time']
@@ -83,13 +83,14 @@ class MCTS():
             if found:
                 break
         if not found:
-            return trip, 400
+            raise Exception('loc id not found in trip')
         day = datetime.fromisoformat(day).strftime('%a').lower()
                         
         POI_dict_day_of_week = deepcopy(self.POI_dict_day_of_week)
         filtered_place = self._remove_duplicate(POI_dict_day_of_week[day],trip)
         filtered_place_id = [place['loc_id'] for place in filtered_place]
         est_time_stay_dict = {place['loc_id'] : place['est_time_stay'] for place in POI_dict_day_of_week[day]}
+        print(filtered_place_id)
 
         return alternative_place(start, middle, end, self.walking_time_matrix, the_rest, est_time_stay_dict, datetime.strptime(start_time, "%H:%M:%S"),filtered_place_id)
     
