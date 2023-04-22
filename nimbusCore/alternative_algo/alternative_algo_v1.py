@@ -23,7 +23,6 @@ def alternative_place(start, middle, end, tt_mat, the_rest, est_time_stay_dict, 
         
         place_b4 = poi
         for place in the_rest:
-            print(f'{place_b4} {place}')
             tmp.append({
                 "type": "travel_dur",
                 "travel_time": tt_mat[int(place_b4)][int(place)]
