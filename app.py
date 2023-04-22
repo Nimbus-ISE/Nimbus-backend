@@ -103,7 +103,7 @@ def alternative_route():
         return Response('Missing data field/s in body', status=500, mimetype='application/json')
     
     try:
-        return json.dumps(TripBuilder.get_alternative_place(data['trip'], str(data['loc_id']), data['day']))
+        return Response(json.dumps(TripBuilder.get_alternative_place(data['trip'], str(data['loc_id']), data['day'])), status=200, mimetype='application/json')
     except Exception as e:
         logging.exception('An error occurred: %s', str(e))
         return Response("error getting alternative place", status=500, mimetype='application/json')
