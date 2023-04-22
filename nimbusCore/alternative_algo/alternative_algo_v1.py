@@ -36,8 +36,6 @@ def alternative_place(start, middle, end, tt_mat, the_rest, est_time_stay_dict, 
             })
             time_now += timedelta(seconds=tt_mat[int(place_b4)][int(place)] + est_time_stay_dict[place])
             place_b4 = place
-        if len(the_rest) > 0:
-            tmp.pop(-1)
         
         plan_segment.append(tmp)
     return plan_segment
