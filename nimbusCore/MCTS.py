@@ -101,8 +101,8 @@ class MCTS():
         filtered_place_id = [place['loc_id'] for place in filtered_place]
         est_time_stay_dict = {place['loc_id'] : place['est_time_stay'] for place in POI_dict_day_of_week[day]}
 
-        print(trip)
-        print(filtered_place_id)
+        # print(trip)
+        # print(filtered_place_id)
 
         return alternative_place(start, middle, end, self.walking_time_matrix, the_rest, est_time_stay_dict, datetime.strptime(start_time, "%H:%M:%S"),filtered_place_id, trip_day_before)
     
