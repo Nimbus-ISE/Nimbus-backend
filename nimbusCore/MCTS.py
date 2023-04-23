@@ -60,8 +60,10 @@ class MCTS():
 
         found = False
         the_rest = []
+        trip_day_before = []
         for travel_day in trip:
             for i, feature in enumerate(travel_day):
+                
                 if found and feature['type'] == 'locations':
                     the_rest.append(feature['loc_id'])
             
@@ -78,10 +80,14 @@ class MCTS():
                     else:
                         end = 'end'
                     found = True
+                if not found:
+                    trip_day_before.append(feature)
                 
                     
             if found:
                 break
+            else:
+                trip_day_before = []
         if not found:
             raise Exception('loc id not found in trip')
         day = datetime.fromisoformat(day).strftime('%a').lower()
@@ -92,7 +98,7 @@ class MCTS():
         est_time_stay_dict = {place['loc_id'] : place['est_time_stay'] for place in POI_dict_day_of_week[day]}
         print(filtered_place_id)
 
-        return alternative_place(start, middle, end, self.walking_time_matrix, the_rest, est_time_stay_dict, datetime.strptime(start_time, "%H:%M:%S"),filtered_place_id)
+        return alternative_place(start, middle, end, self.walking_time_matrix, the_rest, est_time_stay_dict, datetime.strptime(start_time, "%H:%M:%S"),filtered_place_id, trip_day_before)
     
     @staticmethod
     def _remove_duplicate(places: list, travel_plan: list):
