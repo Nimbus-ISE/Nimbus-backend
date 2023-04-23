@@ -91,7 +91,8 @@ class MCTS():
         if not found:
             raise Exception('loc id not found in trip')
         
-        trip_day_before.pop(-1)
+        if len(trip_day_before) > 0:
+            trip_day_before.pop(-1)
 
         day = datetime.fromisoformat(day).strftime('%a').lower()
                         
