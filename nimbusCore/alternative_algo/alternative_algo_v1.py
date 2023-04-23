@@ -8,11 +8,6 @@ def alternative_place(start, middle, end, tt_mat, the_rest, est_time_stay_dict, 
         tmp = deepcopy(trip_day_before)
         time_now = start_time
         if not start == 'start':
-            tmp.append({
-                "type": "travel_dur",
-                "travel_time": tt_mat[int(start)][int(poi)],
-                "travel_type": "walk" ,
-            })
             time_now += timedelta(seconds=tt_mat[int(start)][int(poi)])
         tmp.append({
                 "type": "locations",
@@ -27,7 +22,7 @@ def alternative_place(start, middle, end, tt_mat, the_rest, est_time_stay_dict, 
         for place in the_rest:
             tmp.append({
                 "type": "travel_dur",
-                "travel_time": tt_mat[int(place_b4)][int(place)],
+                "travel_dur": tt_mat[int(place_b4)][int(place)] * 60,
                 "travel_type": "walk" ,
             })
             tmp.append({
