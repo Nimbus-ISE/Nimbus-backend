@@ -90,6 +90,9 @@ class MCTS():
                 trip_day_before = []
         if not found:
             raise Exception('loc id not found in trip')
+        
+        trip_day_before.pop(-1)
+
         day = datetime.fromisoformat(day).strftime('%a').lower()
                         
         POI_dict_day_of_week = deepcopy(self.POI_dict_day_of_week)
