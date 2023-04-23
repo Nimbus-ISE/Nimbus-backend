@@ -13,14 +13,14 @@ def alternative_place(start, middle, end, tt_mat, the_rest, est_time_stay_dict, 
                 "travel_dur": tt_mat[int(start)][int(poi)] * 60,
                 "travel_type": "walk" ,
             })
-            time_now += timedelta(seconds=tt_mat[int(start)][int(poi)])
+            time_now += timedelta(minutes=tt_mat[int(start)][int(poi)])
         tmp.append({
                 "type": "locations",
                 "loc_id": str(poi),
                 "arrival_time": time_now.strftime("%H:%M:%S"),
                 "leave_time": (time_now + timedelta(minutes=est_time_stay_dict[poi])).strftime("%H:%M:%S")
             })
-        time_now += timedelta(seconds=est_time_stay_dict[poi])
+        time_now += timedelta(minutes=est_time_stay_dict[poi])
 
         
         place_b4 = poi
@@ -33,10 +33,10 @@ def alternative_place(start, middle, end, tt_mat, the_rest, est_time_stay_dict, 
             tmp.append({
                 "type": "locations",
                 "loc_id": place,
-                "arrival_time": (time_now + timedelta(seconds=tt_mat[int(place_b4)][int(place)])).strftime("%H:%M:%S"),
-                "leave_time": (time_now + (timedelta(seconds=tt_mat[int(place_b4)][int(place)])) + timedelta(minutes=est_time_stay_dict[place])).strftime("%H:%M:%S")
+                "arrival_time": (time_now + timedelta(minutes=tt_mat[int(place_b4)][int(place)])).strftime("%H:%M:%S"),
+                "leave_time": (time_now + (timedelta(minutes=tt_mat[int(place_b4)][int(place)])) + timedelta(minutes=est_time_stay_dict[place])).strftime("%H:%M:%S")
             })
-            time_now += timedelta(seconds=tt_mat[int(place_b4)][int(place)] + est_time_stay_dict[place])
+            time_now += timedelta(minutes=tt_mat[int(place_b4)][int(place)] + est_time_stay_dict[place])
             place_b4 = place
         
         plan_segment.append(tmp)
