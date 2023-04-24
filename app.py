@@ -76,6 +76,11 @@ def getTripMCTS():
         return 'Invalid travel method'
     
     try:
+        print(data)
+        if data['start_date'][-1] == "Z":
+            data['start_date'].pop(-1)
+        if data['end_date'][-1] == "Z":
+            data['end_date'].pop(-1)
         return json.dumps(TripBuilder.generate_trip_mcts(start_date=datetime.fromisoformat(data['start_date']), end_date=datetime.fromisoformat(data['end_date']), tags=data['tags'].split(','), must_add=None, budget=int(data['budget']), travel_method=data['travel_method'].split(','), trip_pace=int(data['trip_pace'])))
     except Exception as e:
         logging.exception('An error occurred: %s', str(e))
