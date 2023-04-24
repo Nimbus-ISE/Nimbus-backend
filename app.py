@@ -76,6 +76,7 @@ def getTripMCTS():
         return 'Invalid travel method', 400
     
     try:
+        print(data)
         if data['start_date'][-1] == "Z":
             data['start_date'].pop(-1)
         if data['end_date'][-1] == "Z":
