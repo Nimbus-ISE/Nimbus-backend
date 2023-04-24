@@ -77,7 +77,6 @@ def getTripMCTS():
         return Response("Invalid travel method", status=400, mimetype='application/json')
     
     try:
-        print(data)
         if data['start_date'][-1] == "Z":
             data['start_date'].pop(-1)
         if data['end_date'][-1] == "Z":
