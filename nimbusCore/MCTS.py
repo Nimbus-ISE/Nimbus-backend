@@ -44,10 +44,11 @@ class MCTS():
                      for i in range(delta.days + 1)]
         dayRange = [date.strftime('%a').lower() for date in date_list]
         POI_dict_day_of_week = deepcopy(self.POI_dict_day_of_week)
+        
         travel_plan = []
         for day in dayRange:
             POI_dict_day_of_week[day] = self._remove_duplicate(POI_dict_day_of_week[day], travel_plan)
-            travel_day, tree_root = self._travel_day(POI_dict_day_of_week[day],tags,budget, travel_method, must_include, trip_pace)
+            travel_day, tree_root = self._travel_day(POI_dict_day_of_week[day], tags, budget, travel_method, must_include, trip_pace)
             travel_plan.append(travel_day)
             # travel_trees.append(tree_root)
             del tree_root
@@ -113,7 +114,8 @@ class MCTS():
             for feature in travel_day:
                 if feature['type'] == 'locations':
                     used_place += [int(feature['loc_id'])]
+                    
         return [d for d in places if d["loc_id"] not in used_place]
 
-    def _travel_day(self,filtered_POI, tags, budget, travel_method: list, trip_pace: int, must_include: str):
+    def _travel_day(self, filtered_POI, tags, budget, travel_method: list, trip_pace: int, must_include: str):
         return generatePlan(filtered_POI, self.allTags,self.driving_time_matrix,self.walking_time_matrix, tags, budget, travel_method, must_include, trip_pace, False)

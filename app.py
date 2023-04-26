@@ -40,7 +40,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def index():
-    return "no"
+    return "Connection successful :-)"
 
 
 @app.route('/get_sample_trip')
