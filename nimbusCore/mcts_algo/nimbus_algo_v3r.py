@@ -63,7 +63,7 @@ def generatePlan(places, tags, distanceMatrix, walkMatrix,
             if dest in walkMatrix[start].keys():
                 walkMatrix[start][dest] = datetime.timedelta(minutes=walkMatrix[start][dest])
             else:
-                walkMatrix[start][dest] = datetime.timedelta(minutes=99)
+                walkMatrix[start][dest] = datetime.timedelta(minutes=600)
     
     startNode = {
         'loc_id': 'start',
@@ -85,6 +85,9 @@ def generatePlan(places, tags, distanceMatrix, walkMatrix,
     # # calculate score
     placesTagsMatrix = np.array([[tag in place['tags'] for tag in tags] for place in places])
     tagsMatrix = tagWeight * np.array([(tag in userSelectedTags) for tag in tags]).reshape((len(tags), 1))
+    tagsMatrix[0] = (tagsMatrix[0] * randInt(3)) + 2 # hidden gem boost
+
+    # print(tagsMatrix)
 
     # each location tags score
     tagScores = list(np.matmul(placesTagsMatrix, tagsMatrix).reshape(len(places)))
@@ -347,8 +350,8 @@ def generatePlan(places, tags, distanceMatrix, walkMatrix,
             # back propagation
             backPropagation(pointer)
 
-        curCost = [placesDict[loc_id]['price_level'] for loc_id in selectedPlace]
-        print('avg price_level:', sum(curCost) / (len(selectedPlace)))
+        # curCost = [placesDict[loc_id]['price_level'] for loc_id in selectedPlace]
+        # print('avg price_level:', sum(curCost) / (len(selectedPlace)))
 
         return getOptimalPath(treeRoot), treeRoot
 
@@ -384,8 +387,8 @@ if __name__ == '__main__':
         return math.floor((n + 1) * random.random())
 
     tags = [
-        "Restaurant",
         "Hidden Gem",
+        "Restaurant",
         "Must See Attraction",
         "Mall",
         "Religion",
@@ -444,13 +447,16 @@ if __name__ == '__main__':
         data = file.read()
         walkMatrix = eval(data)
         
+    placesDict = {place['loc_id']: place for place in places}
+
     travelMethods = [['drive'], ['drive', 'walk'], ['walk']]
 
     # # testing user params
     # generate random userSelectedTags params
     userSelectedTags = [tag for tag in tags if randInt(1)]
     userSelectedTags = [tag for tag in userSelectedTags if randInt(1)]
-    budget = 3
+    userSelectedTags.append(tags[0])
+    budget = randInt(4)
     travelMethod = travelMethods[randInt(2)]
     tripPace = randInt(2)
     mustInclude = 76
@@ -475,6 +481,10 @@ if __name__ == '__main__':
     print('------------------------------------------------------')
     for place in plan:
         print(place)
+        if place['type'] == 'locations':
+            print(placesDict[place['loc_id']]['tags'], '\n')
+        else:
+            print(' ')
     print('------------------------------------------------------')
     print('tags :', userSelectedTags)
     print('budget :', budget)
