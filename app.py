@@ -78,9 +78,9 @@ def getTripMCTS():
     
     try:
         if data['start_date'][-1] == "Z":
-            data['start_date'].pop(-1)
+            data['start_date'] = data['start_date'][:-1]
         if data['end_date'][-1] == "Z":
-            data['end_date'].pop(-1)
+            data['end_date'] = data['end_date'][:-1]
         res = json.dumps(TripBuilder.generate_trip_mcts(start_date=datetime.fromisoformat(data['start_date']), end_date=datetime.fromisoformat(data['end_date']), tags=data['tags'].split(','), must_include=data['must_include'], budget=int(data['budget']), travel_method=data['travel_method'].split(','), trip_pace=int(data['trip_pace'])))
         return Response(res, status=200, mimetype='application/json')
     except Exception as e:

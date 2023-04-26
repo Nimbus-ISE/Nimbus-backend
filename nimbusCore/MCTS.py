@@ -73,7 +73,7 @@ class MCTS():
                         start_time = feature['arrival_time']
                     else:
                         start = travel_day[i-2]['loc_id']
-                        start_time = travel_day[i-2]['arrival_time']
+                        start_time = travel_day[i-2]['leave_time']
                     middle = travel_day[i]['loc_id']
                     if i + 2 < len(travel_day):
                         end = travel_day[i+2]['loc_id']
