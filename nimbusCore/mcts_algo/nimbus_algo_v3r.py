@@ -15,8 +15,7 @@ from typing import Union,TypeVar
 # have this before importing helper so no import error
 sys.path.append(os.path.realpath(os.path.dirname(__file__)))
 
-from helper import timeStringToTime
-
+from helper import timeStringToTime, randInt
 
 def generatePlan(places, tags, distanceMatrix, walkMatrix, 
                  userSelectedTags: list, 
@@ -77,7 +76,6 @@ def generatePlan(places, tags, distanceMatrix, walkMatrix,
     }
     startNode['hours'] = (timeStringToTime(startNode['hours'][0]), timeStringToTime(startNode['hours'][1]))
         
-    # TODO hidden gem weight increase
     # generate place dict
     placesDict = {place['loc_id']: place for place in places}
     placesDict['start'] = startNode
@@ -85,7 +83,7 @@ def generatePlan(places, tags, distanceMatrix, walkMatrix,
     # # calculate score
     placesTagsMatrix = np.array([[tag in place['tags'] for tag in tags] for place in places])
     tagsMatrix = tagWeight * np.array([(tag in userSelectedTags) for tag in tags]).reshape((len(tags), 1))
-    tagsMatrix[0] = (tagsMatrix[0] * randInt(3)) + 2 # hidden gem boost
+    tagsMatrix[0] = (tagsMatrix[0] * randInt(3)) + 2 # hidden gem tag score boost
 
     # print(tagsMatrix)
 
@@ -116,10 +114,11 @@ def generatePlan(places, tags, distanceMatrix, walkMatrix,
                 travelMethodMatrix[x['loc_id']][y['loc_id']] = 'none'
             else:
                 walkTime = walkMatrix[x['loc_id']][y['loc_id']].seconds
-                driveTime = walkMatrix[x['loc_id']][y['loc_id']].seconds
-                driveScore = placeScores[y['loc_id']] / ((1 + driveTime)) # v1.0
-                # driveScore = 0.99 * placeScores[y['loc_id']] / ((1 + driveTime) ** 0.5) # v1.1 :(
-                placeScoresMatrix[x['loc_id']][y['loc_id']] = driveScore
+                driveTime = distanceMatrix[x['loc_id']][y['loc_id']].seconds
+                
+                score = placeScores[y['loc_id']] / ((1 + driveTime)) # v1.0
+                # score = 0.99 * placeScores[y['loc_id']] / ((1 + driveTime) ** 0.5) # v1.1 :(
+                placeScoresMatrix[x['loc_id']][y['loc_id']] = score
                 
                 # travel method
                 # 1) walk and drive 
@@ -128,15 +127,15 @@ def generatePlan(places, tags, distanceMatrix, walkMatrix,
                         travelMethodMatrix[x['loc_id']][y['loc_id']] = 'walk'
                     else:
                         travelMethodMatrix[x['loc_id']][y['loc_id']] = 'drive'
-                # 2) walk only
-                elif 'walk' in travelMethod:
-                    travelMethodMatrix[x['loc_id']][y['loc_id']] = 'walk'
-                # 3) drive only
+                # 2) drive only       
                 elif 'drive' in travelMethod:
                     if walkTime <= 5 * 60 and 'walk': # walk if less than 5 mins
                         travelMethodMatrix[x['loc_id']][y['loc_id']] = 'walk'
                     else:
                         travelMethodMatrix[x['loc_id']][y['loc_id']] = 'drive'
+                # 3) walk only
+                elif 'walk' in travelMethod:
+                    travelMethodMatrix[x['loc_id']][y['loc_id']] = 'walk'
 
     placeScoresMatrix['start'] = {place['loc_id'] : placeScores[place['loc_id']] for place in places} # start score matrix = 0 to treat every node equally
     travelMethodMatrix['start'] = {place['loc_id'] : 'none' for place in places}
@@ -381,10 +380,6 @@ def generatePlan(places, tags, distanceMatrix, walkMatrix,
 
 
 if __name__ == '__main__':
-    random.seed(time.time())
-
-    def randInt(n):
-        return math.floor((n + 1) * random.random())
 
     tags = [
         "Hidden Gem",
@@ -453,14 +448,16 @@ if __name__ == '__main__':
 
     # # testing user params
     # generate random userSelectedTags params
-    userSelectedTags = [tag for tag in tags if randInt(1)]
-    userSelectedTags = [tag for tag in userSelectedTags if randInt(1)]
-    userSelectedTags.append(tags[0])
+    # userSelectedTags = [tag for tag in tags if randInt(1)]
+    # userSelectedTags = [tag for tag in userSelectedTags if randInt(1)]
+    # userSelectedTags.append(tags[0])
+    userSelectedTags = ["Must See Attraction", "Family", "Photography", "Nature", "Outdoor"]
     budget = randInt(4)
-    travelMethod = travelMethods[randInt(2)]
+    # travelMethod = travelMethods[randInt(2)]
+    travelMethod = ['drive']
     tripPace = randInt(2)
-    mustInclude = 76
-    
+    mustInclude = 50
+
     # TODO change parameters to dict object
     # TEST RUN
     startTimer = time.time()
