@@ -123,13 +123,13 @@ def generatePlan(places, tags, distanceMatrix, walkMatrix,
                 # travel method
                 # 1) walk and drive 
                 if 'walk' in travelMethod and 'drive' in travelMethod:
-                    if walkTime <= 15 * 60 and 'walk': # walk if less than 15 mins
+                    if walkTime <= 15 * 60: # walk if less than 15 mins
                         travelMethodMatrix[x['loc_id']][y['loc_id']] = 'walk'
                     else:
                         travelMethodMatrix[x['loc_id']][y['loc_id']] = 'drive'
                 # 2) drive only       
                 elif 'drive' in travelMethod:
-                    if walkTime <= 5 * 60 and 'walk': # walk if less than 5 mins
+                    if walkTime <= 5 * 60: # walk if less than 5 mins
                         travelMethodMatrix[x['loc_id']][y['loc_id']] = 'walk'
                     else:
                         travelMethodMatrix[x['loc_id']][y['loc_id']] = 'drive'
